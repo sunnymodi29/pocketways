@@ -150,4 +150,4 @@ Share links from the earlier version of the app (`#from=…&trip=…`, `#saved=�
 
 ## License
 
-Released under the [GNU General Public License v3.0](LICENSE).
+Released under the [MIT License](LICENSE).
