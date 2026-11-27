@@ -147,3 +147,7 @@ One radius scale (containers 20px, cards 14px, controls 10px, pills full), seman
 ## Notes
 
 Share links from the earlier version of the app (`#from=…&trip=…`, `#saved=…`, `#poll=…`) still work.
+
+## License
+
+Released under the [GNU General Public License v3.0](LICENSE).
