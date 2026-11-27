@@ -1,6 +1,6 @@
 "use client";
 
-import { SignInButton, useUser } from "@clerk/nextjs";
+import { useAccount } from "@/lib/use-account";
 import { CalendarCheck, CalendarDays, CalendarPlus, ChevronDown, ExternalLink, Loader2, LogIn, Printer } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ import type { DayPlan } from "@/lib/engine";
 import { buildIcs, download, googleCalUrl, slotLines } from "@/lib/export";
 import { connectGoogleCalendar } from "@/lib/google-calendar";
 import { GoogleCalendarIcon } from "./brand-icons";
+import { SignInButton } from "./sign-in";
 import { printItinerary, type PrintMeta } from "@/lib/print";
 import { cn } from "@/lib/utils";
 
@@ -31,7 +32,7 @@ export function TripExport({ days, destName, month, doc }: { days: DayPlan[]; de
   const [start, setStart] = useState(() => defaultStart(month));
   const [gOpen, setGOpen] = useState(false);
   const startDate = () => { const [y, m, d] = start.split("-").map(Number); return new Date(y, m - 1, d); };
-  const { isSignedIn, user } = useUser();
+  const { isSignedIn, user } = useAccount();
   const [adding, setAdding] = useState(false);
   const oneClick = async () => {
     if (!isSignedIn || !user) return toast("Sign in with Google to add the trip to your calendar in one click");
@@ -50,7 +51,7 @@ export function TripExport({ days, destName, month, doc }: { days: DayPlan[]; de
       const e = (await r.json().catch(() => ({}))) as { error?: string };
       if (e.error === "needs_google" || e.error === "needs_calendar_scope") {
         toast("Google needs your permission to add events. Redirecting…");
-        await connectGoogleCalendar(user);
+        await connectGoogleCalendar();
         return;
       }
       toast(`Couldn't add to Google Calendar (${e.error ?? r.status}). Use the links below instead`);
@@ -90,7 +91,7 @@ export function TripExport({ days, destName, month, doc }: { days: DayPlan[]; de
             {adding ? "Adding…" : "Add to Google Calendar"}
           </button>
         ) : (
-          <SignInButton mode="modal">
+          <SignInButton>
             <button type="button" title="Sign in to add every day to your Google Calendar in one click"
               className="inline-flex h-8 items-center gap-1.5 rounded-full bg-primary px-3.5 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90">
               <GoogleCalendarIcon className="size-4" /> Sign in to add to Calendar

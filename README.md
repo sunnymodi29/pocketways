@@ -10,7 +10,7 @@ Pick a city, a budget and the days you have. Get destinations you can actually a
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)
 ![Tailwind](https://img.shields.io/badge/Tailwind-v4-38bdf8?logo=tailwindcss&logoColor=white)
 ![Postgres](https://img.shields.io/badge/Neon-Postgres-00e599?logo=postgresql&logoColor=white)
-![Auth](https://img.shields.io/badge/Auth-Clerk-6c47ff?logo=clerk&logoColor=white)
+![Auth](https://img.shields.io/badge/Auth-Auth.js-8b5cf6)
 
 </div>
 
@@ -34,7 +34,7 @@ Pick a city, a budget and the days you have. Get destinations you can actually a
 **Together**
 - Save trips, compare up to four, and make a share card.
 - "Plan with friends" polls: vote on the trips your group likes.
-- Sign in with Google (Clerk) to sync saved trips and edited itineraries across devices.
+- Sign in with Google (Auth.js) to sync saved trips and edited itineraries across devices.
 - Statically generated travel guides and "trips under ₹X from your city" pages for SEO.
 
 ## Tech stack
@@ -46,7 +46,7 @@ Pick a city, a budget and the days you have. Get destinations you can actually a
 | State and data | Zustand, TanStack Query, Zod |
 | Map | MapLibre GL via react-map-gl |
 | Database | Neon (serverless Postgres) with Drizzle ORM |
-| Auth | Clerk (Google sign-in, Google Calendar scope) |
+| Auth | Auth.js (Google sign-in, sessions in Neon, Google Calendar scope) |
 | Services | Open-Meteo (weather), Unsplash (photos), Travelpayouts (fares) |
 | Tests | Vitest |
 | Hosting | Vercel |
@@ -70,7 +70,7 @@ The app runs with just the defaults. Each service below is optional and switches
 | Variable | Needed for | Notes |
 | --- | --- | --- |
 | `DATABASE_URL` | Polls, synced trips | Neon connection string. Tables are created on first use. |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` | Sign-in, calendar, account sync | From the Clerk dashboard. |
+| `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | Sign-in, calendar, account sync | `AUTH_SECRET` is a random string (`npx auth secret`). The Google values come from Google Cloud. |
 | `UNSPLASH_ACCESS_KEY` | Destination photos | Server-side only. Responses are cached for a week. |
 | `TRAVELPAYOUTS_TOKEN`, `TRAVELPAYOUTS_MARKER` | Live flight fares | Without a token, fares are estimates. |
 | `FARE_MOCK=1` | Trying the live-fare UI | Returns fake fares in development. |
@@ -79,13 +79,17 @@ The app runs with just the defaults. Each service below is optional and switches
 
 Never commit `.env`. It is git-ignored, and only `.env.example` (with empty values) is tracked.
 
-### Setting up Clerk and Google Calendar
+### Setting up Google sign-in and Calendar
 
-1. Create a Clerk application and turn on **Google** under SSO connections.
-2. Under Organizations, set membership to **optional**. Pocketways uses plain user accounts.
-3. For Calendar access, switch Google to **custom credentials**: create an OAuth client in Google Cloud, enable the Google Calendar API, add your Clerk redirect URI, and add the scope `https://www.googleapis.com/auth/calendar.events`.
-4. While your Google app is in testing mode, add your own account as a test user. Google must verify the app before the calendar scope is open to everyone.
+Sign-in uses Auth.js, so it works on any domain, including `*.vercel.app`, with no custom domain needed.
 
+1. In [Google Cloud Console](https://console.cloud.google.com), create a project, then **APIs & Services, OAuth consent screen** (External) and add your own account as a test user.
+2. Under **Credentials**, create an **OAuth client ID** of type *Web application* with these redirect URIs:
+   - `http://localhost:3100/api/auth/callback/google`
+   - `https://<your-app>.vercel.app/api/auth/callback/google`
+3. Put the client ID and secret in `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET`, and generate `AUTH_SECRET`.
+4. For one-click Calendar: enable the **Google Calendar API** and add the scope `https://www.googleapis.com/auth/calendar.events` to the consent screen. Sign-in only asks for name, email and photo; Calendar access is requested later, when the user chooses it.
+5. While the Google app is in testing mode only listed test users can sign in. Publish it, and complete Google's verification for the calendar scope, before opening it to everyone.
 ## Scripts
 
 | Command | What it does |
@@ -128,8 +132,8 @@ Tests live in `tests/`, away from the source. They cover the cost engine, itiner
 ## Deploying to Vercel
 
 1. Push this repository to GitHub and import it in Vercel.
-2. Add the environment variables above in **Project Settings, Environment Variables**. Use your Clerk production keys and a Neon production database.
-3. Set `NEXT_PUBLIC_SITE_URL` to your domain and add that domain in Clerk.
+2. Add the environment variables above in **Project Settings, Environment Variables**. Use a Neon production database and add your Vercel URL to the Google OAuth redirect URIs.
+3. Set `NEXT_PUBLIC_SITE_URL` to your site URL.
 4. Deploy. Guide pages are generated at build time.
 
 ## Design principles

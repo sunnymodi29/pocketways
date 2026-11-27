@@ -1,4 +1,4 @@
-import { boolean, integer, jsonb, pgTable, primaryKey, serial, text } from "drizzle-orm/pg-core";
+import { boolean, integer, jsonb, pgTable, primaryKey, serial, text, timestamp } from "drizzle-orm/pg-core";
 import type { DayPlan } from "@/lib/engine";
 
 export interface PollOption {
@@ -45,8 +45,52 @@ export interface SavedTripRow {
   savedAt?: number;
 }
 export const userData = pgTable("user_data", {
-  userId: text("user_id").primaryKey(), // Clerk user id
+  userId: text("user_id").primaryKey(), // Auth.js user id
   saved: jsonb("saved").$type<SavedTripRow[]>().notNull().default([]),
   edits: jsonb("edits").$type<Record<string, DayPlan[]>>().notNull().default({}),
   updated: integer("updated").notNull(),
 });
+
+/* ---------- Auth.js tables (names and columns follow the Drizzle adapter) ---------- */
+export const authUsers = pgTable("user", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  name: text("name"),
+  email: text("email").unique(),
+  emailVerified: timestamp("emailVerified", { mode: "date" }),
+  image: text("image"),
+  createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const authAccounts = pgTable(
+  "account",
+  {
+    userId: text("userId").notNull().references(() => authUsers.id, { onDelete: "cascade" }),
+    type: text("type").$type<"oauth" | "oidc" | "email" | "webauthn">().notNull(),
+    provider: text("provider").notNull(),
+    providerAccountId: text("providerAccountId").notNull(),
+    refresh_token: text("refresh_token"),
+    access_token: text("access_token"),
+    expires_at: integer("expires_at"),
+    token_type: text("token_type"),
+    scope: text("scope"),
+    id_token: text("id_token"),
+    session_state: text("session_state"),
+  },
+  (a) => [primaryKey({ columns: [a.provider, a.providerAccountId] })],
+);
+
+export const authSessions = pgTable("session", {
+  sessionToken: text("sessionToken").primaryKey(),
+  userId: text("userId").notNull().references(() => authUsers.id, { onDelete: "cascade" }),
+  expires: timestamp("expires", { mode: "date" }).notNull(),
+});
+
+export const authVerificationTokens = pgTable(
+  "verificationToken",
+  {
+    identifier: text("identifier").notNull(),
+    token: text("token").notNull(),
+    expires: timestamp("expires", { mode: "date" }).notNull(),
+  },
+  (v) => [primaryKey({ columns: [v.identifier, v.token] })],
+);

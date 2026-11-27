@@ -1,6 +1,7 @@
 "use client";
 
-import { SignInButton, useUser } from "@clerk/nextjs";
+import { useAccount } from "@/lib/use-account";
+import { SignInButton } from "./sign-in";
 import { UserMenu } from "./user-menu";
 import { ArrowUpRight, BookOpen, Heart, LogIn, MapPin, Moon, PlaneTakeoff, Route, Sun } from "lucide-react";
 import Link from "next/link";
@@ -111,7 +112,7 @@ export function Logo({ phase = "idle", className }: { phase?: "idle" | "in" | "o
 
 export function Header({ onHome, transparent }: { onHome?: () => void; transparent?: boolean }) {
   const [brand, setBrand] = useState<"idle" | "in" | "out">("idle");
-  const { isLoaded, isSignedIn } = useUser();
+  const { isLoaded, isSignedIn } = useAccount();
   const saved = useTrip((s) => s.saved);
   const openSaved = useTrip((s) => s.openSaved);
   const loadSaved = useTrip((s) => s.loadSaved);
@@ -177,7 +178,7 @@ export function Header({ onHome, transparent }: { onHome?: () => void; transpare
         {isLoaded && (isSignedIn ? (
           <span className="grid h-9 place-items-center px-1"><UserMenu /></span>
         ) : (
-          <SignInButton mode="modal">
+          <SignInButton>
             <button type="button" className={btn}><LogIn className="size-4" /><span className="hidden sm:inline">Sign in</span></button>
           </SignInButton>
         ))}

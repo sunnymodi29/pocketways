@@ -1,19 +1,15 @@
-import type { UserResource } from "@clerk/shared/types";
+import { signIn } from "next-auth/react";
 
 export const CAL_SCOPE = "https://www.googleapis.com/auth/calendar.events";
 
 /**
  * Sends the user to Google to grant calendar access, then back to this page.
- * Users who signed in with Google already have the account linked, so that one is re-authorized
- * with the extra scope; only users without Google get a new connection.
+ * It is a second Google sign-in with the extra scope (and offline access so the token can be refreshed).
  */
-export async function connectGoogleCalendar(user: UserResource) {
-  const redirectUrl = location.href;
-  const existing = user.externalAccounts.find((a) => a.provider === "google");
-  const acc = existing
-    ? await existing.reauthorize({ additionalScopes: [CAL_SCOPE], redirectUrl })
-    : await user.createExternalAccount({ strategy: "oauth_google", redirectUrl, additionalScopes: [CAL_SCOPE] });
-  const to = acc.verification?.externalVerificationRedirectURL;
-  if (!to) throw new Error("Google did not return a redirect");
-  location.href = to.toString();
+export async function connectGoogleCalendar() {
+  await signIn(
+    "google",
+    { callbackUrl: location.href },
+    { scope: `openid email profile ${CAL_SCOPE}`, access_type: "offline", prompt: "consent", include_granted_scopes: "true" },
+  );
 }

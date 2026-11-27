@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { useAccount } from "@/lib/use-account";
 import { useEffect, useRef } from "react";
 import { useEdits } from "@/lib/edits";
 import type { DayPlan } from "@/lib/engine";
@@ -11,7 +11,7 @@ import { useTrip, type SavedTrip } from "@/lib/store";
  * On sign-in the server copy and this device's copy are merged (nothing is lost), then changes are pushed.
  */
 export function AccountSync() {
-  const { isLoaded, isSignedIn, user } = useUser();
+  const { isLoaded, isSignedIn, user } = useAccount();
   const ready = useRef<string | null>(null);
 
   useEffect(() => {

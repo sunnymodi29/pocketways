@@ -6,6 +6,10 @@ const DDL = [
   "CREATE TABLE IF NOT EXISTS polls (id TEXT PRIMARY KEY, title TEXT NOT NULL, options JSONB NOT NULL, created INTEGER NOT NULL, multiple BOOLEAN NOT NULL DEFAULT TRUE)",
   "CREATE TABLE IF NOT EXISTS votes (seq SERIAL, poll_id TEXT NOT NULL, voter TEXT NOT NULL, name TEXT NOT NULL DEFAULT '', picks JSONB NOT NULL, updated INTEGER NOT NULL, PRIMARY KEY (poll_id, voter))",
   "CREATE TABLE IF NOT EXISTS rate_limits (key TEXT PRIMARY KEY, count INTEGER NOT NULL)",
+  `CREATE TABLE IF NOT EXISTS "user" ("id" TEXT PRIMARY KEY, "name" TEXT, "email" TEXT UNIQUE, "emailVerified" TIMESTAMP, "image" TEXT, "createdAt" TIMESTAMP NOT NULL DEFAULT NOW())`,
+  `CREATE TABLE IF NOT EXISTS "account" ("userId" TEXT NOT NULL REFERENCES "user"("id") ON DELETE CASCADE, "type" TEXT NOT NULL, "provider" TEXT NOT NULL, "providerAccountId" TEXT NOT NULL, "refresh_token" TEXT, "access_token" TEXT, "expires_at" INTEGER, "token_type" TEXT, "scope" TEXT, "id_token" TEXT, "session_state" TEXT, PRIMARY KEY ("provider", "providerAccountId"))`,
+  `CREATE TABLE IF NOT EXISTS "session" ("sessionToken" TEXT PRIMARY KEY, "userId" TEXT NOT NULL REFERENCES "user"("id") ON DELETE CASCADE, "expires" TIMESTAMP NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS "verificationToken" ("identifier" TEXT NOT NULL, "token" TEXT NOT NULL, "expires" TIMESTAMP NOT NULL, PRIMARY KEY ("identifier", "token"))`,
   "CREATE TABLE IF NOT EXISTS user_data (user_id TEXT PRIMARY KEY, saved JSONB NOT NULL DEFAULT '[]', edits JSONB NOT NULL DEFAULT '{}', updated INTEGER NOT NULL)",
 ];
 

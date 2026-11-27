@@ -1,9 +1,9 @@
 "use client";
 
-import { SignInButton, useClerk, useUser } from "@clerk/nextjs";
-import { CalendarCheck, Camera, Check, Download, Heart, Loader2, LogIn, LogOut, Trash2, UserRound } from "lucide-react";
+import { signOut } from "next-auth/react";
+import { CalendarCheck, Check, Download, Heart, Loader2, LogIn, LogOut, Trash2, UserRound } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,12 +12,14 @@ import { useEdits } from "@/lib/edits";
 import { download } from "@/lib/export";
 import { connectGoogleCalendar } from "@/lib/google-calendar";
 import { useTrip } from "@/lib/store";
+import { useAccount } from "@/lib/use-account";
 import { cn } from "@/lib/utils";
 import { GoogleCalendarIcon, GoogleIcon } from "./brand-icons";
 import { originOptions } from "./filters-panel";
 import { Header } from "./header";
 import { Dropdown } from "./kit";
 import { SavedHost } from "./saved-host";
+import { SignInButton } from "./sign-in";
 import { SectionNav } from "./section-nav";
 import { SiteFooter } from "./site-footer";
 
@@ -60,15 +62,12 @@ const Status = ({ on, yes, no }: { on: boolean; yes: string; no: string }) => (
 );
 
 export function AccountPage() {
-  const { isLoaded, isSignedIn, user } = useUser();
-  const { signOut } = useClerk();
+  const { isLoaded, isSignedIn, user, refresh } = useAccount();
   const saved = useTrip((s) => s.saved.length);
   const home = useTrip((s) => s.S.from);
   const setTrip = useTrip((s) => s.set);
   const edits = useEdits((s) => Object.keys(s.plans).length);
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [first, setFirst] = useState("");
-  const [last, setLast] = useState("");
+  const [name, setName] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [confirm, setConfirm] = useState("");
   const [delOpen, setDelOpen] = useState(false);
@@ -77,22 +76,20 @@ export function AccountPage() {
   const [calendarOn, setCalendarOn] = useState<boolean | null>(null);
 
   useEffect(() => { useTrip.getState().loadSaved(); useEdits.getState().hydrate(); }, []);
-  useEffect(() => { if (user) { setFirst(user.firstName ?? ""); setLast(user.lastName ?? ""); } }, [user]);
+  useEffect(() => { if (user) setName(user.name); }, [user?.name]); // eslint-disable-line react-hooks/exhaustive-deps
   // ask the server (and Google) whether calendar access is really granted
   useEffect(() => {
     if (!user) return;
     fetch("/api/calendar").then((r) => (r.ok ? r.json() : { connected: false })).then((d) => setCalendarOn(!!d.connected)).catch(() => setCalendarOn(false));
-  }, [user]);
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const google = user?.externalAccounts.find((a) => a.provider === "google");
-  const name = user?.fullName || user?.username || "Traveller";
-  const initials = name.split(/\s+/).map((p) => p[0]).slice(0, 2).join("").toUpperCase();
-  const dirty = !!user && (first.trim() !== (user.firstName ?? "") || last.trim() !== (user.lastName ?? ""));
+  const displayName = user?.name || "Traveller";
+  const initials = displayName.split(/\s+/).map((p) => p[0]).slice(0, 2).join("").toUpperCase();
+  const dirty = !!user && name.trim() !== user.name && name.trim().length > 0;
   const since = user?.createdAt ? new Date(user.createdAt).toLocaleDateString("en-IN", { month: "long", year: "numeric" }) : null;
-
   const run = async (key: string, fn: () => Promise<void>, ok: string) => {
     setBusy(key);
-    try { await fn(); toast(ok); } catch (e) { toast((e as { errors?: { message?: string }[] })?.errors?.[0]?.message || "Something went wrong. Try again"); } finally { setBusy(null); }
+    try { await fn(); toast(ok); } catch (e) { toast((e as Error)?.message || "Something went wrong. Try again"); } finally { setBusy(null); }
   };
   const disconnectCalendar = () => run("calOff", async () => {
     const r = await fetch("/api/calendar", { method: "DELETE" });
@@ -100,25 +97,27 @@ export function AccountPage() {
     setCalendarOn(false);
     setCalOpen(false);
   }, "Google Calendar disconnected");
-  const connectCalendar = () => run("cal", async () => { if (user) await connectGoogleCalendar(user); }, "Redirecting to Google…");
+  const connectCalendar = () => run("cal", async () => { await connectGoogleCalendar(); }, "Redirecting to Google…");
   const exportData = () => {
-    const data = { exportedAt: new Date().toISOString(), account: { name, email: user?.primaryEmailAddress?.emailAddress }, savedTrips: useTrip.getState().saved, editedItineraries: useEdits.getState().plans };
+    const data = { exportedAt: new Date().toISOString(), account: { name: displayName, email: user?.email }, savedTrips: useTrip.getState().saved, editedItineraries: useEdits.getState().plans };
     download("pocketways-my-data.json", JSON.stringify(data, null, 2), "application/json");
     toast("Your data was downloaded");
   };
+  const saveName = () => run("name", async () => {
+    const r = await fetch("/api/me/profile", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: name.trim() }) });
+    if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { error?: string }).error || "Couldn't save your name");
+    await refresh();
+  }, "Profile saved");
   const wipe = () => run("del", async () => {
-    if (!user) return;
-    await fetch("/api/me/data", { method: "DELETE" }).catch(() => {});
-    await user.delete();
+    const r = await fetch("/api/me/account", { method: "DELETE" });
+    if (!r.ok) throw new Error("Couldn't delete the account. Try again");
     useTrip.getState().clearSaved();
-    await signOut({ redirectUrl: "/" });
+    await signOut({ callbackUrl: "/" });
   }, "Account deleted");
-
-  const avatar = (cls: string) => (user?.hasImage ? (
+  const avatar = (cls: string) => (user?.image ? (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={user.imageUrl} alt="" className={cn("object-cover", cls)} referrerPolicy="no-referrer" />
+    <img src={user.image} alt="" className={cn("object-cover", cls)} referrerPolicy="no-referrer" />
   ) : null);
-
   return (
     <>
       <Header />
@@ -149,7 +148,7 @@ export function AccountPage() {
             <span className="mx-auto grid size-12 place-items-center rounded-xl bg-primary/10 text-primary"><UserRound className="size-6" /></span>
             <h1 className="mt-3 text-lg font-semibold">Sign in to see your account</h1>
             <p className="mt-1 text-sm text-muted-foreground">Save trips across devices and add itineraries to Google Calendar.</p>
-            <SignInButton mode="modal"><Button className="mt-4"><LogIn /> Sign in</Button></SignInButton>
+            <SignInButton><Button className="mt-4"><LogIn /> Sign in</Button></SignInButton>
           </div>
         ) : (
           <>
@@ -158,11 +157,11 @@ export function AccountPage() {
                 {avatar("size-full") ?? initials}
               </span>
               <div className="min-w-0 flex-1">
-                <h1 className="truncate text-xl font-semibold tracking-tight">{name}</h1>
-                <p className="truncate text-sm text-muted-foreground">{user.primaryEmailAddress?.emailAddress}</p>
+                <h1 className="truncate text-xl font-semibold tracking-tight">{displayName}</h1>
+                <p className="truncate text-sm text-muted-foreground">{user.email}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{since ? `Member since ${since}` : "Member"} · {saved} saved trip{saved === 1 ? "" : "s"}</p>
               </div>
-              <Button variant="outline" size="sm" onClick={() => signOut({ redirectUrl: "/" })}><LogOut /> Sign out</Button>
+              <Button variant="outline" size="sm" onClick={() => signOut({ callbackUrl: "/" })}><LogOut /> Sign out</Button>
             </div>
 
             <SectionNav items={NAV} className="sticky top-[68px] z-10 -mx-4 mt-4 bg-background/90 px-4 py-2 backdrop-blur lg:hidden" />
@@ -172,35 +171,17 @@ export function AccountPage() {
 
               <div className="min-w-0 space-y-5">
                 <Section id="profile" title="Profile" desc="How you appear in Pocketways.">
-                  <Row title="Photo" desc="PNG, JPG or WebP, up to 5 MB.">
-                    <div className="flex items-center gap-3">
-                      <span className="grid size-10 place-items-center overflow-hidden rounded-full bg-surface-2 text-sm font-semibold text-primary">{avatar("size-full") ?? initials}</span>
-                      <Button variant="outline" size="sm" disabled={busy === "photo"} onClick={() => fileRef.current?.click()}>
-                        {busy === "photo" ? <Loader2 className="animate-spin" /> : <Camera />} Change
-                      </Button>
-                      {user.hasImage && (
-                        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-bad" disabled={busy === "photo"} onClick={() => run("photo", async () => { await user.setProfileImage({ file: null }); }, "Photo removed")}>Remove</Button>
-                      )}
-                      <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        e.target.value = "";
-                        if (!file) return;
-                        if (file.size > 5 * 1024 * 1024) return toast("Choose an image under 5 MB");
-                        run("photo", async () => { await user.setProfileImage({ file }); }, "Photo updated");
-                      }} />
-                    </div>
+                  <Row title="Photo" desc="Comes from your Google account. Change it there and it updates here next time you sign in.">
+                    <span className="grid size-10 place-items-center overflow-hidden rounded-full bg-surface-2 text-sm font-semibold text-primary">{avatar("size-full") ?? initials}</span>
                   </Row>
-                  <Row title="Name" desc="Shown in your menu and on shared plans." stack>
-                    <form className="grid grid-cols-1 gap-3 sm:grid-cols-2" onSubmit={(e) => { e.preventDefault(); if (dirty) run("name", async () => { await user.update({ firstName: first.trim(), lastName: last.trim() }); }, "Profile saved"); }}>
-                      <input className={input} aria-label="First name" placeholder="First name" value={first} onChange={(e) => setFirst(e.target.value)} maxLength={40} />
-                      <input className={input} aria-label="Last name" placeholder="Last name" value={last} onChange={(e) => setLast(e.target.value)} maxLength={40} />
-                      <div className="sm:col-span-2">
-                        <Button type="submit" size="sm" disabled={!dirty || busy === "name"}>{busy === "name" ? <Loader2 className="animate-spin" /> : <Check />} Save changes</Button>
-                      </div>
+                  <Row title="Display name" desc="Shown in your menu and on shared plans." stack>
+                    <form className="flex flex-wrap gap-2" onSubmit={(e) => { e.preventDefault(); if (dirty) saveName(); }}>
+                      <input className={cn(input, "min-w-[200px] flex-1")} aria-label="Display name" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} />
+                      <Button type="submit" size="sm" className="h-9" disabled={!dirty || busy === "name"}>{busy === "name" ? <Loader2 className="animate-spin" /> : <Check />} Save</Button>
                     </form>
                   </Row>
                   <Row title="Email" desc="Comes from your Google account.">
-                    <span className="truncate text-sm text-muted-foreground">{user.primaryEmailAddress?.emailAddress}</span>
+                    <span className="truncate text-sm text-muted-foreground">{user.email}</span>
                   </Row>
                 </Section>
 
@@ -211,7 +192,7 @@ export function AccountPage() {
                 </Section>
 
                 <Section id="connections" title="Connected accounts" desc="Services Pocketways can use on your behalf.">
-                  <Row icon={<GoogleIcon className="size-5" />} title="Google" desc={google ? google.emailAddress : "Sign in with Google to connect."}>
+                  <Row icon={<GoogleIcon className="size-5" />} title="Google" desc={user.email}>
                     <span className="inline-flex items-center rounded-full border border-line px-2.5 py-0.5 text-[11.5px] font-medium text-muted-foreground">Sign-in method</span>
                   </Row>
                   <Row icon={<GoogleCalendarIcon className="size-5" />} title="Google Calendar" desc={calendarOn ? "Itineraries can be added as all-day events. Events already in your calendar stay if you disconnect." : "Allow access so itineraries can be added in one click. We only create events you ask for."}>

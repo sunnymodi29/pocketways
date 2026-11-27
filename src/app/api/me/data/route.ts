@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/auth";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { DbNotConfigured, getDb } from "@/db";
@@ -23,7 +23,7 @@ const body = z.object({
 const unavailable = (e: unknown) => (e instanceof DbNotConfigured ? fail(503, "database not configured") : (console.error(e), fail(500, "server error")));
 
 export async function GET() {
-  const { userId } = await auth();
+  const userId = (await auth())?.user?.id;
   if (!userId) return fail(401, "sign in required");
   try {
     const db = await getDb();
@@ -33,7 +33,7 @@ export async function GET() {
 }
 
 export async function PUT(req: Request) {
-  const { userId } = await auth();
+  const userId = (await auth())?.user?.id;
   if (!userId) return fail(401, "sign in required");
   const text = await req.text();
   if (text.length > MAX) return fail(413, "too large");
@@ -49,7 +49,7 @@ export async function PUT(req: Request) {
 }
 /** Removes everything stored for the signed-in user (used before deleting the account). */
 export async function DELETE() {
-  const { userId } = await auth();
+  const userId = (await auth())?.user?.id;
   if (!userId) return fail(401, "sign in required");
   try {
     const db = await getDb();

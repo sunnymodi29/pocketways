@@ -1,6 +1,7 @@
 "use client";
 
-import { useClerk, useUser } from "@clerk/nextjs";
+import { signOut } from "next-auth/react";
+import { useAccount } from "@/lib/use-account";
 import { BookOpen, ChevronDown, Heart, LogOut, Route, Settings } from "lucide-react";
 import Link from "next/link";
 import { DropdownMenu } from "radix-ui";
@@ -10,16 +11,15 @@ import { cn } from "@/lib/utils";
 const item =
   "flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm text-foreground outline-none transition-colors data-[highlighted]:bg-surface-2 data-[highlighted]:text-primary";
 
-/** Signed-in account menu in the app's own style (replaces Clerk's default popup). */
+/** Signed-in account menu in the app's own style. */
 export function UserMenu() {
-  const { user } = useUser();
-  const { signOut } = useClerk();
+  const { user } = useAccount();
   const saved = useTrip((s) => s.saved.length);
   const openSaved = useTrip((s) => s.openSaved);
   if (!user) return null;
 
-  const name = user.fullName || user.username || "Traveller";
-  const email = user.primaryEmailAddress?.emailAddress ?? "";
+  const name = user.name || "Traveller";
+  const email = user.email;
   const initials = name.split(/\s+/).map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 
   return (
@@ -29,9 +29,9 @@ export function UserMenu() {
         className="group flex h-9 items-center gap-2 rounded-lg border border-line bg-surface-2/70 py-1 pr-2.5 pl-1 text-[13px] font-medium outline-none transition-colors hover:border-primary hover:text-primary data-[state=open]:border-primary data-[state=open]:text-primary"
       >
         <span className="grid size-7 shrink-0 place-items-center overflow-hidden rounded-full bg-surface text-[11px] font-bold text-primary">
-          {user.hasImage ? (
+          {user.image ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={user.imageUrl} alt="" className="size-full object-cover" referrerPolicy="no-referrer" />
+            <img src={user.image} alt="" className="size-full object-cover" referrerPolicy="no-referrer" />
           ) : (
             initials
           )}
@@ -50,9 +50,9 @@ export function UserMenu() {
         >
           <div className="flex items-center gap-3 px-3 py-3">
             <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-surface-2 text-sm font-bold text-primary">
-              {user.hasImage ? (
+              {user.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={user.imageUrl} alt="" className="size-full object-cover" referrerPolicy="no-referrer" />
+                <img src={user.image} alt="" className="size-full object-cover" referrerPolicy="no-referrer" />
               ) : (
                 initials
               )}
@@ -77,7 +77,7 @@ export function UserMenu() {
           <DropdownMenu.Item asChild className={item}>
             <Link href="/account"><Settings className="size-4 text-muted-foreground" /> Manage account</Link>
           </DropdownMenu.Item>
-          <DropdownMenu.Item className={cn(item, "data-[highlighted]:text-bad")} onSelect={() => signOut({ redirectUrl: "/" })}>
+          <DropdownMenu.Item className={cn(item, "data-[highlighted]:text-bad")} onSelect={() => signOut({ callbackUrl: "/" })}>
             <LogOut className="size-4 text-muted-foreground" /> Sign out
           </DropdownMenu.Item>
         </DropdownMenu.Content>

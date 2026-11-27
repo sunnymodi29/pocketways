@@ -17,6 +17,7 @@
     "prebuild": "node scripts/copy-map-worker.mjs"
   },
   "dependencies": {
+    "@auth/drizzle-adapter": "^1.11.3",
     "@clerk/nextjs": "^7.10.10",
     "@libsql/client": "^0.18.0",
     "@neondatabase/serverless": "^1.2.1",
@@ -28,6 +29,7 @@
     "lucide-react": "^1.81.0",
     "maplibre-gl": "^6.19.0",
     "next": "^16.4.6",
+    "next-auth": "^5.0.0-beta.32",
     "next-themes": "^0.4.6",
     "nuqs": "^2.10.3",
     "radix-ui": "^1.8.1",
