@@ -314,7 +314,7 @@ export function TripDetail({ onShareCard }: { onShareCard: (id: string) => void 
               ["Getting there", r.mode ? `${r.mode.name}, ~${hrsLabel(r.mode.hrs)}` : "Local"],
               ["Weather", `${r.wx.label} in ${MONTHS[S.month - 1]}`],
             ],
-            eat: d.eat, tips: d.tips, skip: d.skip, link: location.href,
+            eat: d.eat, tips: d.tips, skip: d.skip, link: typeof location === "undefined" ? undefined : location.href,
           }} />
         </Section>
 

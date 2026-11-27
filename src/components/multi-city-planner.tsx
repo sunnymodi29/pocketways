@@ -203,7 +203,7 @@ export function MultiCityPlanner() {
                     ["Trip length", `${trip.totalDays} days, ${trip.stops.length} cities`],
                     ["Distance", `${Math.round(trip.km).toLocaleString("en-IN")} km`],
                   ],
-                  tips: trip.warnings, link: location.href,
+                  tips: trip.warnings, link: typeof location === "undefined" ? undefined : location.href,
                 }} />
               </>
             )}
