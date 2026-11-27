@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { decodeRoute, encodeRoute, optimiseOrder, planMulti, STARTERS } from "./multicity";
-import { defaultState, guideState } from "./engine";
+import { decodeRoute, encodeRoute, optimiseOrder, planMulti, STARTERS } from "@/lib/multicity";
+import { defaultState, guideState } from "@/lib/engine";
 
 const st = guideState({ ...defaultState(), from: "delhi", month: 10, travelers: 2 });
 

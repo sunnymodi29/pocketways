@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { DESTINATIONS } from "./data";
-import { dishType, evaluate, guideState, itinerary, destOf } from "./engine";
-import { buildIcs } from "./export";
-import { planText } from "./links";
+import { DESTINATIONS } from "@/lib/data";
+import { dishType, evaluate, guideState, itinerary, destOf } from "@/lib/engine";
+import { buildIcs } from "@/lib/export";
+import { planText } from "@/lib/links";
 
 const st = (over = {}) => guideState({ from: "delhi", days: 4, month: 12, ...over });
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { DESTINATIONS, ORIGINS } from "./data";
-import { computeResults, defaultState, destOf, evaluate, itinerary, type TripState } from "./engine";
+import { DESTINATIONS, ORIGINS } from "@/lib/data";
+import { computeResults, defaultState, destOf, evaluate, itinerary, type TripState } from "@/lib/engine";
 
 const base = (over: Partial<TripState> = {}): TripState => ({
   ...defaultState(),
