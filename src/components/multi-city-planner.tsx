@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowDown, ArrowUp, Check, Copy, MapPin, Plus, Route, Shuffle, Trash2, TriangleAlert, Wand2 } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -114,7 +115,7 @@ export function MultiCityPlanner() {
       <Header />
       <SavedHost />
       <main id="main" className="mx-auto w-full max-w-[1040px] px-4 pt-[92px] pb-4">
-        <p className="mb-4 text-[13px] text-muted-foreground">Home › Multi-city trips</p>
+        <p className="mb-4 text-[13px] text-muted-foreground"><Link href="/" className="transition-colors hover:text-primary">Home</Link> › Multi-city trips</p>
         <h1 className="text-[clamp(1.8rem,4vw,2.8rem)] leading-tight font-medium tracking-tight">Build a multi-city trip</h1>
         <p className="mt-3 max-w-[64ch] text-muted-foreground">Chain two to six places into one route. We price every leg and stop, check the weather, and write a day-by-day plan you can edit and share.</p>
 

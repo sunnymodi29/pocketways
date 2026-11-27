@@ -170,3 +170,7 @@
 /* ---------- page loader and route progress ---------- */
 .tw-progress-done { animation: tw-fade-out 0.4s ease-out both; }
 .tw-progress-load { animation: tw-progress 9s cubic-bezier(0.1, 0.6, 0.2, 1) both; }
+
+/* soft bobbing for friendly illustrations */
+@keyframes tw-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+.tw-float { animation: tw-float 3s ease-in-out infinite; }

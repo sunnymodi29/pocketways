@@ -2,6 +2,8 @@
 
 import { useAccount } from "@/lib/use-account";
 import { useEffect, useRef } from "react";
+import { toast } from "sonner";
+import { WELCOME_KEY } from "./sign-in";
 import { useEdits } from "@/lib/edits";
 import type { DayPlan } from "@/lib/engine";
 import { useTrip, type SavedTrip } from "@/lib/store";
@@ -46,6 +48,16 @@ export function AccountSync() {
     })();
     return () => { cancelled = true; };
   }, [isLoaded, isSignedIn, user]);
+
+  // a friendly hello right after signing in (only when this tab started the sign-in)
+  useEffect(() => {
+    if (!isSignedIn || !user) return;
+    let flagged = false;
+    try { flagged = sessionStorage.getItem(WELCOME_KEY) === "1"; sessionStorage.removeItem(WELCOME_KEY); } catch { /* storage blocked */ }
+    if (!flagged) return;
+    const first = user.name.split(" ")[0];
+    toast(first ? `Welcome aboard, ${first}!` : "Welcome aboard!", { description: "Your trips now follow you to every device." });
+  }, [isSignedIn, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // push changes (debounced) once the first merge has happened
   useEffect(() => {
