@@ -1,0 +1,166 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Pocketways tokens — flat: no shadows, no gradients. Dark is the default theme. */
+:root {
+  --background: #fff3ec;
+  --foreground: #111111;
+  --surface: #ffffff;
+  --surface-2: #f8e8de;
+  --muted-foreground: #77685f;
+  --line: #efd9cb;
+  --primary: #f3652f;
+  --primary-2: #d9511d;
+  --primary-foreground: #ffffff;
+  --good: #2f8f4e;
+  --warn: #b8740a;
+  --bad: #d0381d;
+  --blue: #2f5d8a;
+  --radius: 14px;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.dark {
+  --background: #111111;
+  --foreground: #ffffff;
+  --surface: #1a1a1a;
+  --surface-2: #242424;
+  --muted-foreground: #a0a0a0;
+  --line: #2d2d2d;
+  --good: #6fcf8a;
+  --warn: #f0b64a;
+  --bad: #ff7b61;
+  --blue: #7ea6d1;
+}
+
+@theme inline {
+  --font-sans: var(--font-anuphan), "Noto Sans", system-ui, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--surface-2);
+  --color-line: var(--line);
+  --color-border: var(--line);
+  --color-input: var(--line);
+  --color-ring: var(--primary);
+  --color-primary: var(--primary);
+  --color-primary-2: var(--primary-2);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--surface-2);
+  --color-secondary-foreground: var(--foreground);
+  --color-accent: var(--surface-2);
+  --color-accent-foreground: var(--foreground);
+  --color-destructive: var(--bad);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--foreground);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--foreground);
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+  --color-blue: var(--blue);
+  --color-whatsapp: #25d366; /* brand colour: only for WhatsApp actions */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-2xl: 20px;
+  /* flat: every shadow token is none */
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-2xl: none;
+  --ease-out-soft: var(--ease);
+}
+
+@layer base {
+  * { @apply border-line; }
+  html { color-scheme: light dark; }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    min-height: 100dvh;
+  }
+  button, [role="button"] { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* ---------- motion helpers (flat: wipes and fades, no lift / scale / shadow) ---------- */
+@keyframes tw-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.tw-wipe { animation: tw-wipe 0.3s var(--ease); }
+@keyframes tw-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.tw-rise { animation: tw-rise 0.4s var(--ease) both; }
+@keyframes tw-fade { from { opacity: 0; } to { opacity: 1; } }
+.tw-fade { animation: tw-fade 0.3s var(--ease) both; }
+@keyframes tw-spin { to { transform: rotate(360deg); } }
+.tw-spin { animation: tw-spin 0.8s linear infinite; }
+
+/* accent bar that grows in on hover / when active */
+.tw-bar { position: relative; overflow: hidden; }
+.tw-bar::before {
+  content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--primary);
+  clip-path: inset(100% 0 0 0); transition: clip-path 0.35s var(--ease);
+}
+.tw-bar:hover::before, .tw-bar[data-active="true"]::before { clip-path: inset(0); }
+
+/* underline that draws in */
+.tw-underline { background: linear-gradient(currentColor, currentColor) 0 100% / 0% 2px no-repeat; transition: background-size 0.4s var(--ease); }
+.tw-bar:hover .tw-underline, a:hover > .tw-underline, .tw-underline:hover { background-size: 100% 2px; }
+
+/* ---------- map markers ---------- */
+.maplibregl-ctrl-group { border-radius: 10px !important; box-shadow: none !important; border: 1px solid var(--line); background: var(--surface) !important; }
+.maplibregl-ctrl-group button { background-color: transparent !important; }
+.dark .maplibregl-ctrl-group button .maplibregl-ctrl-icon { filter: invert(1); }
+.maplibregl-ctrl-attrib { background: color-mix(in srgb, var(--surface) 80%, transparent) !important; color: var(--muted-foreground) !important; }
+.maplibregl-ctrl-attrib a { color: var(--muted-foreground) !important; }
+.tw-pin {
+  display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px 4px 6px; border-radius: 99px;
+  background: var(--surface); color: var(--foreground); border: 2px solid var(--good);
+  font: 600 12px/1 var(--font-anuphan), system-ui, sans-serif; white-space: nowrap; cursor: pointer;
+  animation: tw-rise 0.4s var(--ease) both; transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+.tw-pin svg { width: 14px; height: 14px; color: var(--primary); }
+.tw-pin.over { border-color: var(--warn); }
+.tw-pin .pp { opacity: 0.7; font-weight: 500; }
+.tw-pin.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.tw-pin.active svg { color: #fff; }
+.tw-origin { position: relative; width: 16px; height: 16px; border-radius: 50%; background: var(--foreground); border: 3px solid var(--background); outline: 5px solid color-mix(in srgb, var(--foreground) 22%, transparent); }
+.tw-origin::after { content: ""; position: absolute; inset: -3px; border-radius: 50%; border: 2px solid var(--foreground); opacity: 0; animation: tw-ring 2.4s ease-out infinite; pointer-events: none; }
+@keyframes tw-ring { 0% { transform: scale(0.8); opacity: 0.7; } 100% { transform: scale(2.4); opacity: 0; } }
+.tw-origin-label { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); font: 600 12px/1 var(--font-anuphan), system-ui; padding: 3px 8px; border-radius: 99px; background: var(--surface); color: var(--foreground); border: 1px solid var(--line); white-space: nowrap; }
+
+/* logo: pin drops in from above, leaves downward */
+@keyframes tw-pin-in { from { opacity: 0; transform: translateY(-36px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes tw-pin-out { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(36px); } }
+.tw-pin-in { animation: tw-pin-in 0.5s var(--ease) forwards; }
+.tw-pin-out { animation: tw-pin-out 0.5s var(--ease) forwards; }
+
+/* ---------- custom scrollbar: thin, flat, follows the theme ---------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--muted-foreground) 45%, transparent) transparent;
+}
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-corner { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--muted-foreground) 38%, transparent);
+  border-radius: 99px;
+  /* transparent border keeps the thumb slim and inset from the edge */
+  border: 3px solid transparent;
+  background-clip: content-box;
+  transition: background-color 0.2s var(--ease);
+}
+*::-webkit-scrollbar-thumb:hover { background-color: var(--primary); }
+*::-webkit-scrollbar-thumb:active { background-color: var(--primary-2); }
+/* chip rows scroll sideways without a visible bar */
+.tw-noscroll { scrollbar-width: none; }
+.tw-noscroll::-webkit-scrollbar { display: none; }
