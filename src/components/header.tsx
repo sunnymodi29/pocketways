@@ -153,7 +153,7 @@ export function Header({ onHome, transparent }: { onHome?: () => void; transpare
         <Tagline />
       </div>
       <nav className="flex items-center gap-1">
-        {isLoaded && !isSignedIn && (
+        {!(isLoaded && isSignedIn) && (
           <>
         <button type="button" className={btn} onClick={() => openSaved()} aria-label="My trips">
           <Heart className="size-4" />
