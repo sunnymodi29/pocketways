@@ -15,14 +15,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [qc] = useState(() => new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } }));
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
+      {/* SessionProvider wraps everything that reads the session, including AccountSync */}
       <SessionProvider>
-      <QueryClientProvider client={qc}>
-        <NuqsAdapter>
-          <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
-        </NuqsAdapter>
-      </QueryClientProvider>
+        <QueryClientProvider client={qc}>
+          <NuqsAdapter>
+            <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
+          </NuqsAdapter>
+        </QueryClientProvider>
+        <AccountSync />
       </SessionProvider>
-      <AccountSync />
       <AnimatedFavicon />
       <InstallChip />
       <Toaster position="bottom-center" />
