@@ -265,7 +265,7 @@ export function AccountPage() {
               <input className={cn(input, "mt-1 font-normal normal-case tracking-normal text-foreground")} value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="DELETE" autoComplete="off" />
             </label>
             <DialogFooter className="gap-2 sm:justify-end">
-              <Button variant="outline" onClick={() => setDelOpen(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => { setDelOpen(false); setConfirm(""); }}>Cancel</Button>
               <Button variant="destructive" disabled={confirm !== "DELETE" || busy === "del"} onClick={wipe}>
                 {busy === "del" ? <Loader2 className="animate-spin" /> : <Trash2 />} Delete account
               </Button>

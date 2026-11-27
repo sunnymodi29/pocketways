@@ -2,6 +2,7 @@
 
 import { ArrowRight, Heart, MapPin, PencilLine, Plane, PlaneTakeoff, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { cloneElement, isValidElement, useEffect, useRef, useState } from "react";
 import { useSignInPrompt } from "@/lib/sign-in-prompt";
@@ -80,6 +81,9 @@ export function SignInButton({ children, title, description }: {
 export function SignInHost() {
   const { open, setOpen, title, description } = useSignInPrompt();
   const [busy, setBusy] = useState(false);
+  // the window belongs to the whole app, so close it when the page changes (for example after tapping Terms)
+  const pathname = usePathname();
+  useEffect(() => { setOpen(false); }, [pathname, setOpen]);
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setBusy(false); }}>
       <DialogContent overlayClassName="bg-black/70 backdrop-blur-sm" className="gap-5 sm:max-w-md">
