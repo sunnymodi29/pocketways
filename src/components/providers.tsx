@@ -10,6 +10,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AccountSync } from "./account-sync";
 import { AnimatedFavicon } from "./animated-favicon";
 import { InstallChip } from "./install";
+import { RouteProgress } from "./route-progress";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [qc] = useState(() => new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } }));
@@ -24,6 +25,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         </QueryClientProvider>
         <AccountSync />
       </SessionProvider>
+      <RouteProgress />
       <AnimatedFavicon />
       <InstallChip />
       <Toaster position="bottom-center" />

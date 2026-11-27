@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { CompareDialog, CompareTray, ShareCardDialog } from "./dialogs";
 import { FiltersBody } from "./filters-panel";
 import { Header } from "./header";
+import { PageLoader } from "./page-loader";
 import { Hero, Spotlight, useSpotlight } from "./home";
 import { MapView, type MapCommand } from "./map-view";
 import { PollCreateDialog } from "./poll-create-dialog";
@@ -37,6 +38,8 @@ export function AppShell() {
   const [animateKey, setAnimateKey] = useState(0);
   const [cardInput, setCardInput] = useState<CardInput | null>(null);
   const [cmpItems, setCmpItems] = useState<SavedTrip[] | null>(null);
+  const [mapReady, setMapReady] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setMapReady(true), 12_000); return () => clearTimeout(t); }, []);
   const heroRef = useRef<HTMLElement>(null);
   const nonce = useRef(0);
   const send = useCallback((c: Omit<MapCommand, "nonce">) => setCmd({ ...c, nonce: ++nonce.current }), []);
@@ -188,8 +191,10 @@ export function AppShell() {
         plannerInsets={plannerInsets}
         onSelect={(id) => (started ? select(id) : openFromHome(id))}
         onLanded={() => { setLanded(true); setAnimateKey((k) => k + 1); }}
+        onReady={() => setMapReady(true)}
       />
       <Header onHome={goHome} transparent={phase === "intro"} />
+      {!mapReady && <PageLoader label="Loading the map…" hint="Getting the globe ready for your trip." />}
 
       {phase === "intro" && (
         <>

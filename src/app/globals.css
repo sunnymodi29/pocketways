@@ -101,6 +101,9 @@
 @keyframes tw-fade { from { opacity: 0; } to { opacity: 1; } }
 .tw-fade { animation: tw-fade 0.3s var(--ease) both; }
 @keyframes tw-spin { to { transform: rotate(360deg); } }
+@keyframes tw-plane { 0% { left: 0; } 100% { left: calc(100% - 2.25rem); } }
+@keyframes tw-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes tw-progress { from { width: 8%; } to { width: 88%; } }
 .tw-spin { animation: tw-spin 0.8s linear infinite; }
 
 /* accent bar that grows in on hover / when active */
@@ -164,3 +167,9 @@
 /* chip rows scroll sideways without a visible bar */
 .tw-noscroll { scrollbar-width: none; }
 .tw-noscroll::-webkit-scrollbar { display: none; }
+
+/* ---------- page loader and route progress ---------- */
+.tw-loader { animation: tw-fade 0.3s ease-out 0.25s both; }
+.tw-plane { animation: tw-plane 2.2s var(--ease) infinite alternate; }
+.tw-progress-done { animation: tw-fade-out 0.4s ease-out both; }
+.tw-progress-load { animation: tw-progress 9s cubic-bezier(0.1, 0.6, 0.2, 1) both; }
