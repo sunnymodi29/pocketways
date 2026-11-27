@@ -31,8 +31,6 @@ interface Props {
   plannerInsets: () => MapInsets;
   onSelect: (id: string) => void;
   onLanded: () => void;
-  /** the map style and first frame are in */
-  onReady?: () => void;
 }
 
 const R = Math.PI / 180;
@@ -322,7 +320,7 @@ export function MapView(props: Props) {
       el?.removeAttribute("open");
       el?.classList.remove("maplibregl-compact-show");
     };
-    map.once("load", () => { collapseAttribution(); setTimeout(collapseAttribution, 600); P.current.onReady?.(); });
+    map.once("load", () => { collapseAttribution(); setTimeout(collapseAttribution, 600); });
     map.on("style.load", () => {
       try { setupStyle(document.documentElement.classList.contains("dark")); } catch (e) { console.warn("map style setup failed", e); }
     });

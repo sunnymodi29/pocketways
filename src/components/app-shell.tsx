@@ -11,9 +11,9 @@ import { cn } from "@/lib/utils";
 import { CompareDialog, CompareTray, ShareCardDialog } from "./dialogs";
 import { FiltersBody } from "./filters-panel";
 import { Header } from "./header";
-import { PageLoader } from "./page-loader";
 import { Hero, Spotlight, useSpotlight } from "./home";
-import { MapView, type MapCommand } from "./map-view";
+import dynamic from "next/dynamic";
+import type { MapCommand } from "./map-view";
 import { PollCreateDialog } from "./poll-create-dialog";
 import { ResultsList, TripDetail } from "./results-panel";
 import { SavedPanel } from "./saved-panel";
@@ -22,6 +22,9 @@ const DESKTOP = "(min-width: 1101px)";
 const isDesktop = () => typeof window !== "undefined" && window.matchMedia(DESKTOP).matches;
 const panel =
   "fixed z-30 flex min-h-0 flex-col overflow-hidden border border-line bg-surface min-[1101px]:rounded-2xl max-[1100px]:inset-x-0 max-[1100px]:bottom-[60px] max-[1100px]:h-[62dvh] max-[1100px]:rounded-t-2xl max-[1100px]:border-b-0";
+
+// The map library is large. Loading it separately lets the page appear first and keeps other pages light.
+const MapView = dynamic(() => import("./map-view").then((m) => m.MapView), { ssr: false });
 
 export function AppShell() {
   const router = useRouter();
@@ -38,8 +41,6 @@ export function AppShell() {
   const [animateKey, setAnimateKey] = useState(0);
   const [cardInput, setCardInput] = useState<CardInput | null>(null);
   const [cmpItems, setCmpItems] = useState<SavedTrip[] | null>(null);
-  const [mapReady, setMapReady] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setMapReady(true), 12_000); return () => clearTimeout(t); }, []);
   const heroRef = useRef<HTMLElement>(null);
   const nonce = useRef(0);
   const send = useCallback((c: Omit<MapCommand, "nonce">) => setCmd({ ...c, nonce: ++nonce.current }), []);
@@ -191,10 +192,8 @@ export function AppShell() {
         plannerInsets={plannerInsets}
         onSelect={(id) => (started ? select(id) : openFromHome(id))}
         onLanded={() => { setLanded(true); setAnimateKey((k) => k + 1); }}
-        onReady={() => setMapReady(true)}
       />
       <Header onHome={goHome} transparent={phase === "intro"} />
-      {!mapReady && <PageLoader label="Loading the map…" hint="Getting the globe ready for your trip." />}
 
       {phase === "intro" && (
         <>

@@ -13,6 +13,8 @@ const DDL = [
   "CREATE TABLE IF NOT EXISTS user_data (user_id TEXT PRIMARY KEY, saved JSONB NOT NULL DEFAULT '[]', edits JSONB NOT NULL DEFAULT '{}', updated INTEGER NOT NULL)",
 ];
 
+const TABLE_COUNT = DDL.length;
+
 export class DbNotConfigured extends Error {
   constructor() {
     super("DATABASE_URL is not set (use your Neon connection string)");
@@ -25,8 +27,14 @@ function init() {
   const client = neon(url);
   const db = drizzle({ client, schema });
   // Tables are created on first use, so a fresh Neon database needs no manual setup.
+  // One cheap lookup tells us whether they already exist, so a cold start costs a single round trip
+  // instead of nine. If any is missing, all are created in one batched request.
   const ready = (async () => {
-    for (const q of DDL) await client.query(q);
+    const rows = (await client.query(
+      "SELECT COUNT(*)::int AS n FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('polls','votes','rate_limits','user','account','session','verificationToken','user_data')",
+    )) as { n: number }[];
+    if (rows[0]?.n === TABLE_COUNT) return;
+    await client.transaction(DDL.map((q) => client.query(q)));
   })();
   return { db, ready };
 }

@@ -2,7 +2,7 @@
 export const LEGAL = {
   product: "Pocketways",
   /** Who runs the service. Set NEXT_PUBLIC_OPERATOR_NAME in the environment (not in the repo) to show a name. */
-  operator: process.env.NEXT_PUBLIC_OPERATOR_NAME || "the Pocketways team",
+  operator: process.env.NEXT_PUBLIC_OPERATOR_NAME || "Pocketways",
   /** Shown as the contact and grievance address. Set NEXT_PUBLIC_CONTACT_EMAIL in the environment. */
   email: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "",
   /** When these documents last changed in substance. */
