@@ -79,14 +79,19 @@ export function SignInButton({ children, title, description }: {
 
 /** The one sign-in window for the whole app. Mounted once, opened from SignInButton or useGate. */
 export function SignInHost() {
-  const { open, setOpen, title, description } = useSignInPrompt();
+  const { open, setOpen, title, description, next } = useSignInPrompt();
   const [busy, setBusy] = useState(false);
   // the window belongs to the whole app, so close it when the page changes (for example after tapping Terms)
   const pathname = usePathname();
-  useEffect(() => { setOpen(false); }, [pathname, setOpen]);
+  const lastPath = useRef(pathname);
+  useEffect(() => {
+    if (lastPath.current === pathname) return; // only a real page change closes it, not the first render
+    lastPath.current = pathname;
+    setOpen(false);
+  }, [pathname, setOpen]);
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setBusy(false); }}>
-      <DialogContent overlayClassName="bg-black/70 backdrop-blur-sm" className="gap-5 sm:max-w-md">
+      <DialogContent className="gap-5 sm:max-w-md">
           <PlaneOrbit />
           <DialogHeader className="items-start text-left">
             <span className="relative mb-1 grid size-11 place-items-center overflow-hidden rounded-lg bg-primary text-primary-foreground">
@@ -115,7 +120,7 @@ export function SignInHost() {
               className="group/g tw-rise h-11 w-full text-sm font-semibold hover:border-primary"
               style={{ animationDelay: "0.55s" }}
               disabled={busy}
-              onClick={() => { setBusy(true); try { sessionStorage.setItem(WELCOME_KEY, "1"); } catch { /* storage blocked */ } signIn("google", { callbackUrl: location.href }); }}
+              onClick={() => { setBusy(true); try { sessionStorage.setItem(WELCOME_KEY, "1"); } catch { /* storage blocked */ } signIn("google", { callbackUrl: next || location.href }); }}
             >
               <GoogleIcon className="size-5" /> {busy ? "Opening Google…" : "Continue with Google"} <ArrowRight className="size-4 -translate-x-1 opacity-0 transition-all duration-300 group-hover/g:translate-x-0 group-hover/g:opacity-100" />
             </Button>

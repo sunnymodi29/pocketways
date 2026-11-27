@@ -2,7 +2,7 @@
 
 import { signOut } from "next-auth/react";
 import { useAccount } from "@/lib/use-account";
-import { BookOpen, ChevronDown, Heart, LogOut, Route, Settings } from "lucide-react";
+import { BookOpen, ChevronDown, Heart, LogOut, Route, Settings, Vote } from "lucide-react";
 import Link from "next/link";
 import { DropdownMenu } from "radix-ui";
 import { useTrip } from "@/lib/store";
@@ -66,6 +66,9 @@ export function UserMenu() {
           <DropdownMenu.Item className={item} onSelect={() => openSaved()}>
             <Heart className="size-4 text-primary" /> My trips
             {saved > 0 && <b className="ml-auto grid min-w-5 place-items-center rounded-full bg-primary px-1.5 text-[11px] leading-5 text-primary-foreground">{saved}</b>}
+          </DropdownMenu.Item>
+          <DropdownMenu.Item asChild className={item}>
+            <Link href="/account#polls"><Vote className="size-4 text-primary" /> My polls</Link>
           </DropdownMenu.Item>
           <DropdownMenu.Item asChild className={item}>
             <Link href="/multi-city"><Route className="size-4 text-primary" /> Multi-city trips</Link>

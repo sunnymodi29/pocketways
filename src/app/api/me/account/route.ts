@@ -4,6 +4,7 @@ import { DbNotConfigured, getDb } from "@/db";
 import { authUsers, userData } from "@/db/schema";
 import { clearGoogleTokens, googleAccess } from "@/lib/google-token";
 import { fail, ok } from "@/lib/http";
+import { unlinkAccountFromPolls } from "@/lib/poll";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,7 @@ export async function DELETE() {
       }).catch(() => null);
       await clearGoogleTokens(id).catch(() => null);
     }
+    await unlinkAccountFromPolls(id);
     const db = await getDb();
     await db.delete(userData).where(eq(userData.userId, id));
     await db.delete(authUsers).where(eq(authUsers.id, id)); // accounts and sessions cascade

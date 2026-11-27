@@ -14,6 +14,10 @@ export const polls = pgTable("polls", {
   created: integer("created").notNull(), // unix seconds
   /** true: tick every trip you like; false: one choice per voter */
   multiple: boolean("multiple").notNull().default(true),
+  /** the signed-in user who created it (empty for polls made before accounts were linked) */
+  creator: text("creator"),
+  /** when voting closes (unix seconds). Empty: open until the poll expires after 60 days. Ending a poll sets this to now. */
+  closes: integer("closes"),
 });
 
 export const votes = pgTable(
@@ -26,6 +30,8 @@ export const votes = pgTable(
     name: text("name").notNull().default(""),
     picks: jsonb("picks").$type<string[]>().notNull(),
     updated: integer("updated").notNull(),
+    /** set when the voter was signed in, so the poll shows up under My polls */
+    userId: text("user_id"),
   },
   (t) => [primaryKey({ columns: [t.pollId, t.voter] })],
 );

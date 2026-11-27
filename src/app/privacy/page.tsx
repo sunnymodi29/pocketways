@@ -42,7 +42,7 @@ export default function Page() {
             ["Sessions", "A session token and its expiry so you stay signed in.", "Only if you sign in"],
             ["Google Calendar access", "An access token and refresh token, and the permission granted, so we can add events when you ask.", "Only if you allow calendar access"],
             ["Your plans", "Saved trips and itineraries you edited (as you changed them).", "Stored on your device; synced to your account if you sign in"],
-            ["Polls", "Poll title, the trips offered, votes, optional display names, and a random voter ID kept in your browser.", "Only if you create or vote in a poll"],
+            ["Polls", "Poll title, the trips offered, when voting closes, votes, optional display names, and a random voter ID kept in your browser. When you are signed in, polls you create and votes you cast are also linked to your account, so they appear under My polls, and your first name is shown on polls you create and next to votes you cast.", "Only if you create or vote in a poll"],
             ["Technical data", "IP address, browser type and pages requested, in hosting logs. Hourly request counters tied to an IP address, used only to limit abuse.", "Automatically, when you use the site"],
             ["Messages to us", "Whatever you send if you contact us.", "Only if you contact us"],
           ]}

@@ -5,7 +5,8 @@ import type { GeoJSONSource, Map as MLMap, Marker } from "maplibre-gl";
 import type { Feature, FeatureCollection, LineString } from "geojson";
 
 // Serve the worker from /public (see scripts/copy-map-worker.mjs); bundler-generated worker URLs 404.
-maplibregl.setWorkerUrl("/vendor/maplibre-gl-worker.mjs");
+// the version in the address means the file can be kept for a year: a new MapLibre gets a new address
+maplibregl.setWorkerUrl(`/vendor/maplibre-gl-worker.mjs?v=${maplibregl.getVersion()}`);
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useTheme } from "next-themes";
 import { useEffect, useRef } from "react";

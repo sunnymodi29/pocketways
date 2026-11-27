@@ -19,13 +19,10 @@ export const metadata: Metadata = {
     "Plan trips that fit your pocket. Enter your city, budget and days to get destinations, total trip cost, travel options and a day-by-day itinerary.",
   applicationName: "Pocketways",
   manifest: "/manifest.webmanifest",
-  icons: {
-    icon: [
-      { url: "/icons/favicon.svg", type: "image/svg+xml" },
-      { url: "/icons/favicon-32.png", sizes: "32x32", type: "image/png" },
-    ],
-    apple: "/icons/apple-touch-icon.png",
-  },
+  // No <link rel="icon"> here on purpose. When a page declares several icons the browser picks one (usually the SVG),
+  // and the animated tab icon, which AnimatedFavicon adds, never gets shown. So it is the only icon link on the page;
+  // /favicon.ico (in /public) is what browsers show for the moment before it runs, and for anything without JavaScript.
+  icons: { apple: "/icons/apple-touch-icon.png" },
   appleWebApp: { capable: true, title: "Pocketways" },
   openGraph: { type: "website", siteName: "Pocketways", locale: "en_IN" },
   twitter: { card: "summary_large_image" },

@@ -15,6 +15,11 @@ const config: NextConfig = {
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
         ],
       },
+      // Big files in /public are not fingerprinted by Next, so they get their own cache rules (Next's own
+      // /_next/static files are already cached for a year).
+      { source: "/vendor/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] }, // addressed by version
+      { source: "/borders.geojson", headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }] },
+      { source: "/icons/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=604800, stale-while-revalidate=2592000" }] },
     ];
   },
   turbopack: { root: path.resolve(__dirname) },

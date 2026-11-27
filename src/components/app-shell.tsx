@@ -4,6 +4,7 @@ import { Globe, Luggage, SlidersHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { useSignInPrompt } from "@/lib/sign-in-prompt";
 import { destOf, evaluate, originOf, type Result } from "@/lib/engine";
 import { hashFor, parseSavedHash, useResults, useTrip, type SavedTrip } from "@/lib/store";
 import type { CardInput } from "@/lib/share-card";
@@ -102,6 +103,17 @@ export function AppShell() {
     window.addEventListener("hashchange", route);
     return () => window.removeEventListener("hashchange", route);
   }, [route]);
+  // sent here from a poll link while signed out: ask them to sign in, then take them back to that poll
+  useEffect(() => {
+    const next = new URLSearchParams(location.search).get("next");
+    if (!next || !/^\/poll\/[a-f0-9]{8}$/.test(next)) return;
+    useSignInPrompt.getState().ask({
+      title: "Sign in to join this poll",
+      description: "Polls are for signed-in friends. Sign in with Google and you'll land right back on it.",
+      next,
+    });
+    history.replaceState(null, "", location.pathname + location.hash);
+  }, []);
   useEffect(() => {
     if (started) history.replaceState(null, "", hashFor(S, selectedId));
   }, [started, S, selectedId]);

@@ -3,8 +3,8 @@ import { drizzle } from "drizzle-orm/neon-http";
 import * as schema from "./schema";
 
 const DDL = [
-  "CREATE TABLE IF NOT EXISTS polls (id TEXT PRIMARY KEY, title TEXT NOT NULL, options JSONB NOT NULL, created INTEGER NOT NULL, multiple BOOLEAN NOT NULL DEFAULT TRUE)",
-  "CREATE TABLE IF NOT EXISTS votes (seq SERIAL, poll_id TEXT NOT NULL, voter TEXT NOT NULL, name TEXT NOT NULL DEFAULT '', picks JSONB NOT NULL, updated INTEGER NOT NULL, PRIMARY KEY (poll_id, voter))",
+  "CREATE TABLE IF NOT EXISTS polls (id TEXT PRIMARY KEY, title TEXT NOT NULL, options JSONB NOT NULL, created INTEGER NOT NULL, multiple BOOLEAN NOT NULL DEFAULT TRUE, creator TEXT, closes INTEGER)",
+  "CREATE TABLE IF NOT EXISTS votes (seq SERIAL, poll_id TEXT NOT NULL, voter TEXT NOT NULL, name TEXT NOT NULL DEFAULT '', picks JSONB NOT NULL, updated INTEGER NOT NULL, user_id TEXT, PRIMARY KEY (poll_id, voter))",
   "CREATE TABLE IF NOT EXISTS rate_limits (key TEXT PRIMARY KEY, count INTEGER NOT NULL)",
   `CREATE TABLE IF NOT EXISTS "user" ("id" TEXT PRIMARY KEY, "name" TEXT, "email" TEXT UNIQUE, "emailVerified" TIMESTAMP, "image" TEXT, "createdAt" TIMESTAMP NOT NULL DEFAULT NOW())`,
   `CREATE TABLE IF NOT EXISTS "account" ("userId" TEXT NOT NULL REFERENCES "user"("id") ON DELETE CASCADE, "type" TEXT NOT NULL, "provider" TEXT NOT NULL, "providerAccountId" TEXT NOT NULL, "refresh_token" TEXT, "access_token" TEXT, "expires_at" INTEGER, "token_type" TEXT, "scope" TEXT, "id_token" TEXT, "session_state" TEXT, PRIMARY KEY ("provider", "providerAccountId"))`,
@@ -14,6 +14,16 @@ const DDL = [
 ];
 
 const TABLE_COUNT = DDL.length;
+
+// Columns added after the first release. Safe to run on any database: they only add what is missing.
+const MIGRATE = [
+  "ALTER TABLE polls ADD COLUMN IF NOT EXISTS creator TEXT",
+  "ALTER TABLE polls ADD COLUMN IF NOT EXISTS closes INTEGER",
+  "ALTER TABLE votes ADD COLUMN IF NOT EXISTS user_id TEXT",
+  "CREATE INDEX IF NOT EXISTS polls_creator_idx ON polls (creator)",
+  "CREATE INDEX IF NOT EXISTS votes_user_idx ON votes (user_id)",
+];
+const MIGRATED_COLUMNS = 3;
 
 export class DbNotConfigured extends Error {
   constructor() {
@@ -31,10 +41,11 @@ function init() {
   // instead of nine. If any is missing, all are created in one batched request.
   const ready = (async () => {
     const rows = (await client.query(
-      "SELECT COUNT(*)::int AS n FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('polls','votes','rate_limits','user','account','session','verificationToken','user_data')",
-    )) as { n: number }[];
-    if (rows[0]?.n === TABLE_COUNT) return;
-    await client.transaction(DDL.map((q) => client.query(q)));
+      "SELECT (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('polls','votes','rate_limits','user','account','session','verificationToken','user_data'))::int AS n, " +
+        "(SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = 'public' AND ((table_name = 'polls' AND column_name IN ('creator','closes')) OR (table_name = 'votes' AND column_name = 'user_id')))::int AS c",
+    )) as { n: number; c: number }[];
+    if (rows[0]?.n === TABLE_COUNT && rows[0]?.c === MIGRATED_COLUMNS) return;
+    await client.transaction([...DDL, ...MIGRATE].map((q) => client.query(q)));
   })();
   return { db, ready };
 }

@@ -1,16 +1,19 @@
 "use client";
 
 import { signOut } from "next-auth/react";
-import { CalendarCheck, Check, Download, Heart, Loader2, LogIn, LogOut, Trash2, UserRound } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowUpRight, CalendarCheck, Check, Download, Flag, Heart, Loader2, LogIn, LogOut, Trash2, UserRound, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { destOf } from "@/lib/engine";
 import { useEdits } from "@/lib/edits";
 import { download } from "@/lib/export";
 import { connectGoogleCalendar } from "@/lib/google-calendar";
+import type { MyPoll } from "@/lib/poll";
 import { useTrip } from "@/lib/store";
 import { useAccount } from "@/lib/use-account";
 import { cn } from "@/lib/utils";
@@ -23,7 +26,7 @@ import { SignInButton } from "./sign-in";
 import { SectionNav } from "./section-nav";
 import { SiteFooter } from "./site-footer";
 
-const NAV = [["profile", "Profile"], ["preferences", "Preferences"], ["connections", "Connected accounts"], ["data", "Your data"], ["danger", "Danger zone"]] as const;
+const NAV = [["profile", "Profile"], ["preferences", "Preferences"], ["connections", "Connected accounts"], ["polls", "My polls"], ["data", "Your data"], ["danger", "Danger zone"]] as const;
 const input = "h-9 w-full rounded-lg border border-line bg-surface-2 px-3 text-sm outline-none transition-colors focus:border-primary";
 
 /** One settings group: title and description on top, rows below separated by dividers. */
@@ -55,6 +58,46 @@ function Row({ title, desc, children, stack, icon }: { title: string; desc?: Rea
   );
 }
 
+const pill = "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium whitespace-nowrap";
+
+/** Polls this account made or voted in, newest first. */
+function MyPolls() {
+  const q = useQuery({
+    queryKey: ["my-polls"],
+    staleTime: 10_000,
+    queryFn: async () => {
+      const r = await fetch("/api/me/polls");
+      if (!r.ok) throw new Error("Couldn't load your polls");
+      return (await r.json()) as MyPoll[];
+    },
+  });
+  if (q.isPending) return <div className="space-y-2 px-5 py-4"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div>;
+  if (q.isError) return <Row title="Couldn't load your polls" desc="Check your connection and try again."><Button variant="outline" size="sm" onClick={() => q.refetch()}>Retry</Button></Row>;
+  if (!q.data.length) return <Row title="No polls yet" desc="Start one with Plan with friends in My trips, or vote in a friend's poll, and it will show up here. Votes you cast before signing in aren't included." />;
+  return (
+    <>
+      {q.data.map((p) => {
+        const names = p.trips.map((t) => destOf(t)?.name).filter(Boolean) as string[];
+        const trips = names.length > 3 ? `${names.slice(0, 3).join(", ")} +${names.length - 3}` : names.join(", ");
+        return (
+          <Link key={p.id} href={`/poll/${p.id}`} className="group/poll flex items-center gap-3 px-5 py-3.5 transition-colors duration-200 hover:bg-surface-2/50">
+            <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-line bg-surface-2 text-primary">{p.role === "created" ? <Users className="size-4" /> : <Check className="size-4" />}</span>
+            <span className="min-w-0 flex-1">
+              <b className="block truncate text-sm font-medium">{p.title}</b>
+              <span className="block truncate text-[13px] text-muted-foreground">{trips} · {p.votes} {p.votes === 1 ? "vote" : "votes"}</span>
+            </span>
+            <span className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center">
+              <span className={cn(pill, p.role === "created" ? "border-primary/40 bg-primary/10 text-primary" : "border-line text-muted-foreground")}>{p.role === "created" ? "Created" : "Voted"}</span>
+              <span className={cn(pill, p.closed ? "border-line text-muted-foreground" : "border-good/30 bg-good/10 text-good")}>{p.closed ? <><Flag className="size-3" /> Ended</> : "Open"}</span>
+            </span>
+            <ArrowUpRight className="size-4 shrink-0 text-muted-foreground transition-colors duration-200 group-hover/poll:text-primary" />
+          </Link>
+        );
+      })}
+    </>
+  );
+}
+
 const Status = ({ on, yes, no }: { on: boolean; yes: string; no: string }) => (
   <span className={cn("inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11.5px] font-medium", on ? "border-good/30 bg-good/15 text-good" : "border-line text-muted-foreground")}>
     {on && <Check className="size-3" />}{on ? yes : no}
@@ -63,6 +106,12 @@ const Status = ({ on, yes, no }: { on: boolean; yes: string; no: string }) => (
 
 export function AccountPage() {
   const { isLoaded, isSignedIn, user, refresh } = useAccount();
+  // arriving from a shortcut such as /account#polls: the sections only exist once the account has loaded
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn || !location.hash) return;
+    const el = document.getElementById(location.hash.slice(1));
+    if (el) requestAnimationFrame(() => el.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }, [isLoaded, isSignedIn]);
   const saved = useTrip((s) => s.saved.length);
   const home = useTrip((s) => s.S.from);
   const setTrip = useTrip((s) => s.set);
@@ -207,6 +256,10 @@ export function AccountPage() {
                       <Button size="sm" disabled={busy === "cal"} onClick={connectCalendar}>{busy === "cal" ? <Loader2 className="animate-spin" /> : <CalendarCheck />} Allow access</Button>
                     )}
                   </Row>
+                </Section>
+
+                <Section id="polls" title="My polls" desc="Polls you've created or voted in.">
+                  <MyPolls />
                 </Section>
 
                 <Section id="data" title="Your data" desc="Saved on this device and synced to your account.">

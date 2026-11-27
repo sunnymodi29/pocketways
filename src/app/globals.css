@@ -97,9 +97,10 @@
 @keyframes tw-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 .tw-wipe { animation: tw-wipe 0.3s var(--ease); }
 @keyframes tw-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-.tw-rise { animation: tw-rise 0.4s var(--ease) both; }
+/* "backwards": hidden until its delay is over, then the animation ends and lets go of the element completely */
+.tw-rise { animation: tw-rise 0.4s var(--ease) backwards; }
 @keyframes tw-fade { from { opacity: 0; } to { opacity: 1; } }
-.tw-fade { animation: tw-fade 0.3s var(--ease) both; }
+.tw-fade { animation: tw-fade 0.3s var(--ease) backwards; }
 @keyframes tw-spin { to { transform: rotate(360deg); } }
 @keyframes tw-fade-out { from { opacity: 1; } to { opacity: 0; } }
 @keyframes tw-progress { from { width: 8%; } to { width: 88%; } }
@@ -127,7 +128,7 @@
   display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px 4px 6px; border-radius: 99px;
   background: var(--surface); color: var(--foreground); border: 2px solid var(--good);
   font: 600 12px/1 var(--font-anuphan), system-ui, sans-serif; white-space: nowrap; cursor: pointer;
-  animation: tw-rise 0.4s var(--ease) both; transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  animation: tw-rise 0.4s var(--ease) backwards; transition: background-color 0.2s, color 0.2s, border-color 0.2s;
 }
 .tw-pin svg { width: 14px; height: 14px; color: var(--primary); }
 .tw-pin.over { border-color: var(--warn); }
@@ -135,7 +136,7 @@
 .tw-pin.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 .tw-pin.active svg { color: #fff; }
 .tw-origin { position: relative; width: 16px; height: 16px; border-radius: 50%; background: var(--foreground); border: 3px solid var(--background); outline: 5px solid color-mix(in srgb, var(--foreground) 22%, transparent); }
-.tw-origin::after { content: ""; position: absolute; inset: -3px; border-radius: 50%; border: 2px solid var(--foreground); opacity: 0; animation: tw-ring 2.4s ease-out infinite; pointer-events: none; }
+.tw-origin::after { content: ""; position: absolute; inset: -3px; border-radius: 50%; border: 2px solid var(--foreground); opacity: 0; animation: tw-ring 2.4s ease-out 3; pointer-events: none; } /* three pulses, then it stops */
 @keyframes tw-ring { 0% { transform: scale(0.8); opacity: 0.7; } 100% { transform: scale(2.4); opacity: 0; } }
 .tw-origin-label { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); font: 600 12px/1 var(--font-anuphan), system-ui; padding: 3px 8px; border-radius: 99px; background: var(--surface); color: var(--foreground); border: 1px solid var(--line); white-space: nowrap; }
 
@@ -167,29 +168,28 @@
 .tw-progress-done { animation: tw-fade-out 0.4s ease-out both; }
 .tw-progress-load { animation: tw-progress 9s cubic-bezier(0.1, 0.6, 0.2, 1) both; }
 
-/* soft bobbing for friendly illustrations */
-@keyframes tw-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-.tw-float { animation: tw-float 3s ease-in-out infinite; }
-
-/* logo hover sequence on a loop: plane flies off diagonally, pin drops in from above and out the bottom, plane returns */
+/* logo loop: one icon at a time, back to back. Each move takes 16% of the loop (about 0.42s at the current 2.6s loop) and the next one starts the
+   instant the last one ends, so the tile is never empty and never shows both:
+   plane rests 0-18%, flies off 18-34%, pin drops in 34-50%, rests 50-68%, drops out 68-84%, plane flies back in 84-100%.
+   Every exit is its entry played backwards (the app's ease-out curve 0.2, 0.8, 0.2, 1 reversed to 0.8, 0, 0.8, 0.2). */
 @keyframes tw-logo-plane {
-  0%, 18% { transform: none; opacity: 1; }
-  32% { transform: translate(36px, -36px); opacity: 0; }
-  32.1%, 84% { transform: translate(36px, -36px); opacity: 0; }
-  84.1% { transform: translate(-36px, 36px); opacity: 0; }
+  0%, 18% { transform: none; opacity: 1; animation-timing-function: cubic-bezier(0.8, 0, 0.8, 0.2); }
+  34% { transform: translate(36px, -36px); opacity: 0; }
+  34.1%, 84% { transform: translate(-36px, 36px); opacity: 0; }
   100% { transform: none; opacity: 1; }
 }
 @keyframes tw-logo-pin {
-  0%, 30% { transform: translateY(-36px); opacity: 0; }
-  42%, 62% { transform: translateY(0); opacity: 1; }
-  76%, 100% { transform: translateY(36px); opacity: 0; }
+  0%, 34% { transform: translateY(-36px); opacity: 0; }
+  50% { transform: translateY(0); opacity: 1; }
+  68% { transform: translateY(0); opacity: 1; animation-timing-function: cubic-bezier(0.8, 0, 0.8, 0.2); }
+  84%, 100% { transform: translateY(36px); opacity: 0; }
 }
-.tw-logo-plane { animation: tw-logo-plane 3s var(--ease) infinite; }
-.tw-logo-pin { animation: tw-logo-pin 3s var(--ease) infinite; opacity: 0; }
+.tw-logo-plane { animation: tw-logo-plane 2.6s var(--ease) infinite; }
+.tw-logo-pin { animation: tw-logo-pin 2.6s var(--ease) infinite; opacity: 0; }
 @media (prefers-reduced-motion: reduce) { .tw-logo-plane, .tw-logo-pin { animation: none; } .tw-logo-pin { display: none; } }
 
 /* header logo: loops on every screen (no change on hover) */
 @media (prefers-reduced-motion: no-preference) {
-  .tw-logo-loop .tw-lp { animation: tw-logo-plane 3s var(--ease) infinite; }
-  .tw-logo-loop .tw-lpin { animation: tw-logo-pin 3s var(--ease) infinite; }
+  .tw-logo-loop .tw-lp { animation: tw-logo-plane 2.6s var(--ease) infinite; }
+  .tw-logo-loop .tw-lpin { animation: tw-logo-pin 2.6s var(--ease) infinite; }
 }

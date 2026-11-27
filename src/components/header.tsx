@@ -91,11 +91,11 @@ function Tagline() {
 }
 
 /** Plane flies out diagonally (top-right); the pin drops in from above and, on leave, exits downward. */
-export function Logo({ className }: { className?: string }) {
+export function Logo({ className, icon = "size-[18px]" }: { className?: string; icon?: string }) {
   return (
     <span className={cn("tw-logo-loop relative grid size-9 place-items-center overflow-hidden rounded-lg bg-primary text-primary-foreground", className)}>
-      <PlaneTakeoff className="tw-lp size-[18px]" />
-      <MapPin className="tw-lpin absolute size-[18px]" />
+      <PlaneTakeoff className={cn("tw-lp", icon)} />
+      <MapPin className={cn("tw-lpin absolute", icon)} />
     </span>
   );
 }

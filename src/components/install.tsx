@@ -1,9 +1,10 @@
 "use client";
 
-import { PlaneTakeoff, Smartphone, X } from "lucide-react";
+import { Smartphone, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useTrip } from "@/lib/store";
+import { Logo } from "./header";
 import { Button } from "@/components/ui/button";
 
 interface BIPEvent extends Event {
@@ -68,7 +69,7 @@ export function InstallButton() {
 function IosSheet({ onClose }: { onClose: () => void }) {
   const kbd = "rounded-md bg-surface-2 px-2 py-px font-semibold";
   return (
-    <div className="fixed inset-0 z-[95] flex items-end justify-center bg-black/50 p-3.5" onClick={onClose}>
+    <div className="fixed inset-0 z-[95] flex items-end justify-center bg-black/70 p-3.5 backdrop-blur-sm" onClick={onClose}>
       <div className="grid w-[min(420px,100%)] gap-2.5 rounded-2xl bg-surface p-5" onClick={(e) => e.stopPropagation()}>
         <b>Add Pocketways to your home screen</b>
         <ol className="list-decimal space-y-1.5 pl-5 text-sm text-muted-foreground">
@@ -104,7 +105,7 @@ export function InstallChip() {
   return (
     <>
       <div className="tw-rise fixed bottom-[76px] left-1/2 z-[80] flex w-[min(420px,calc(100vw-24px))] -translate-x-1/2 items-center gap-2.5 rounded-2xl border border-line bg-surface px-3 py-2.5 max-[1100px]:bottom-[70px] min-[1101px]:bottom-6">
-        <span className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground"><PlaneTakeoff className="size-4" /></span>
+        <Logo className="size-8" icon="size-4" />
         <span className="grid flex-1 text-sm"><b>Add Pocketways to home screen</b><small className="text-muted-foreground">Open it like an app, one tap</small></span>
         <Button size="sm" className="rounded-lg" onClick={async () => { if ((await install()) === "ios") { setSheet(true); setShow(false); } else setShow(false); }}>Add</Button>
         <button type="button" onClick={close} aria-label="Close" className="grid size-7 place-items-center rounded-lg text-muted-foreground hover:text-foreground"><X className="size-4" /></button>

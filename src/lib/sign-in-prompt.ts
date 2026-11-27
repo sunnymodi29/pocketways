@@ -11,14 +11,17 @@ interface Prompt {
   open: boolean;
   title: string;
   description: string;
+  /** where to land after Google (a path on this site); empty means the page they are on */
+  next: string;
   /** Open the sign-in popup from anywhere. `title` and `description` say why sign-in is needed. */
-  ask: (opts?: { title?: string; description?: string }) => void;
+  ask: (opts?: { title?: string; description?: string; next?: string }) => void;
   setOpen: (open: boolean) => void;
 }
 
 export const useSignInPrompt = create<Prompt>((set) => ({
   open: false,
   ...DEFAULT_PROMPT,
-  ask: (opts) => set({ open: true, title: opts?.title ?? DEFAULT_PROMPT.title, description: opts?.description ?? DEFAULT_PROMPT.description }),
+  next: "",
+  ask: (opts) => set({ open: true, title: opts?.title ?? DEFAULT_PROMPT.title, description: opts?.description ?? DEFAULT_PROMPT.description, next: opts?.next ?? "" }),
   setOpen: (open) => set({ open }),
 }));
