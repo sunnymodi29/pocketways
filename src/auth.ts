@@ -28,6 +28,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
     providers: [Google],
     session: { strategy: "database" },
     trustHost: true,
+    pages: { signIn: "/signin" }, // our own page, so Auth.js never shows its default one
     callbacks: {
       session({ session, user }) {
         session.user.id = user.id;
