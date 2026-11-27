@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { PollView } from "@/components/poll-view";
-import { POLL_ID, pollView } from "@/lib/poll";
+import { POLL_ID, pollTitle } from "@/lib/poll";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +10,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   let title = "Where should we go?";
   if (POLL_ID.test(id)) {
     try {
-      title = (await pollView(id, null)).title;
+      title = (await pollTitle(id)) ?? title;
     } catch {
       /* unknown poll: keep the generic title */
     }

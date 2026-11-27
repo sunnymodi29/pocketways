@@ -11,6 +11,7 @@ import { AccountSync } from "./account-sync";
 import { AnimatedFavicon } from "./animated-favicon";
 import { InstallChip } from "./install";
 import { RouteProgress } from "./route-progress";
+import { SignInHost } from "./sign-in";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [qc] = useState(() => new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } }));
@@ -28,6 +29,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <RouteProgress />
       <AnimatedFavicon />
       <InstallChip />
+      <SignInHost />
       <Toaster position="bottom-center" />
     </ThemeProvider>
   );

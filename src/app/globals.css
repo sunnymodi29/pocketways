@@ -140,10 +140,6 @@
 .tw-origin-label { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); font: 600 12px/1 var(--font-anuphan), system-ui; padding: 3px 8px; border-radius: 99px; background: var(--surface); color: var(--foreground); border: 1px solid var(--line); white-space: nowrap; }
 
 /* logo: pin drops in from above, leaves downward */
-@keyframes tw-pin-in { from { opacity: 0; transform: translateY(-36px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes tw-pin-out { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(36px); } }
-.tw-pin-in { animation: tw-pin-in 0.5s var(--ease) forwards; }
-.tw-pin-out { animation: tw-pin-out 0.5s var(--ease) forwards; }
 
 /* ---------- custom scrollbar: thin, flat, follows the theme ---------- */
 * {
@@ -174,3 +170,26 @@
 /* soft bobbing for friendly illustrations */
 @keyframes tw-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 .tw-float { animation: tw-float 3s ease-in-out infinite; }
+
+/* logo hover sequence on a loop: plane flies off diagonally, pin drops in from above and out the bottom, plane returns */
+@keyframes tw-logo-plane {
+  0%, 18% { transform: none; opacity: 1; }
+  32% { transform: translate(36px, -36px); opacity: 0; }
+  32.1%, 84% { transform: translate(36px, -36px); opacity: 0; }
+  84.1% { transform: translate(-36px, 36px); opacity: 0; }
+  100% { transform: none; opacity: 1; }
+}
+@keyframes tw-logo-pin {
+  0%, 30% { transform: translateY(-36px); opacity: 0; }
+  42%, 62% { transform: translateY(0); opacity: 1; }
+  76%, 100% { transform: translateY(36px); opacity: 0; }
+}
+.tw-logo-plane { animation: tw-logo-plane 3s var(--ease) infinite; }
+.tw-logo-pin { animation: tw-logo-pin 3s var(--ease) infinite; opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .tw-logo-plane, .tw-logo-pin { animation: none; } .tw-logo-pin { display: none; } }
+
+/* header logo: loops on every screen (no change on hover) */
+@media (prefers-reduced-motion: no-preference) {
+  .tw-logo-loop .tw-lp { animation: tw-logo-plane 3s var(--ease) infinite; }
+  .tw-logo-loop .tw-lpin { animation: tw-logo-pin 3s var(--ease) infinite; }
+}

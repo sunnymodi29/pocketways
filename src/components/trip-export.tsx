@@ -91,7 +91,7 @@ export function TripExport({ days, destName, month, doc }: { days: DayPlan[]; de
             {adding ? "Adding…" : "Add to Google Calendar"}
           </button>
         ) : (
-          <SignInButton reason="calendar">
+          <SignInButton title="Add this trip to your calendar" description="Sign in with Google and every day of the plan lands in your calendar in one click.">
             <button type="button" title="Sign in to add every day to your Google Calendar in one click"
               className="inline-flex h-8 items-center gap-1.5 rounded-full bg-primary px-3.5 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90">
               <GoogleCalendarIcon className="size-4" /> Sign in to add to Calendar

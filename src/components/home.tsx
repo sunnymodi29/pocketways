@@ -56,13 +56,13 @@ function SbField({
   return (
     <div
       className={cn(
-        "group/sb relative flex min-w-0 cursor-pointer flex-col justify-center gap-px rounded-xl px-[18px] py-2.5 transition-colors duration-200 ease-out hover:bg-foreground/[0.09] has-[:focus-visible]:bg-foreground/[0.09] has-[[data-state=open]]:bg-foreground/[0.09]",
+        "group/sb relative flex min-w-0 cursor-pointer flex-col justify-center gap-px rounded-xl px-3.5 py-2 transition-colors duration-200 ease-out hover:bg-foreground/[0.09] sm:px-[18px] sm:py-2.5 has-[:focus-visible]:bg-foreground/[0.09] has-[[data-state=open]]:bg-foreground/[0.09]",
         !last &&
           "after:absolute after:top-4 after:-right-[3px] after:bottom-4 after:w-px after:bg-line after:transition-opacity after:duration-200 hover:after:opacity-0 max-[1100px]:after:hidden",
         className,
       )}
     >
-      <span className="text-[12px] font-normal text-muted-foreground transition-colors duration-200 group-hover/sb:text-foreground group-has-[[data-state=open]]/sb:text-primary">
+      <span className="text-[11px] font-normal text-muted-foreground transition-colors duration-200 sm:text-[12px] group-hover/sb:text-foreground group-has-[[data-state=open]]/sb:text-primary">
         {label}
       </span>
       {children}
@@ -70,7 +70,7 @@ function SbField({
   );
 }
 const sbTrigger =
-  "rounded-md border-0 bg-transparent px-0 py-0.5 text-[15px] font-medium hover:border-0 data-[state=open]:border-0 [&_svg]:transition-colors group-hover/sb:[&_svg]:text-primary";
+  "h-7 rounded-md border-0 bg-transparent px-0 py-0.5 text-[15px] font-medium sm:h-9 hover:border-0 data-[state=open]:border-0 [&_svg]:transition-colors group-hover/sb:[&_svg]:text-primary";
 
 export const Hero = forwardRef<
   HTMLElement,
@@ -119,14 +119,14 @@ export const Hero = forwardRef<
       ref={ref}
       className={cn(
         "fixed z-30 flex flex-col [&>*]:shrink-0 transition-all duration-500 ease-[var(--ease)]",
-        "inset-x-3 bottom-3 max-h-[58dvh] overflow-y-auto rounded-2xl border border-line bg-surface p-4",
+        "inset-x-3 bottom-3 max-h-[calc(100dvh-88px)] overflow-y-auto rounded-2xl border border-line bg-surface p-3 sm:p-4",
         "min-[1101px]:inset-x-auto min-[1101px]:top-[100px] min-[1101px]:[@media(max-height:860px)]:top-[84px] min-[1101px]:bottom-auto min-[1101px]:left-8 min-[1101px]:max-h-[calc(100dvh-116px)] min-[1101px]:w-[min(700px,calc(100vw-64px))] min-[1101px]:overflow-visible min-[1101px]:border-transparent min-[1101px]:bg-transparent min-[1101px]:p-0",
         leaving && "pointer-events-none translate-y-3 opacity-0",
       )}
     >
       <h1
         style={rise(0)}
-        className="tw-rise mb-3 border-l-4 border-primary pl-[14px] text-[clamp(2.2rem,9.5vw,4.4rem)] leading-[1.04] font-medium tracking-normal uppercase min-[1101px]:mb-[18px] min-[1101px]:pl-[18px] min-[1101px]:text-[clamp(36px,min(5.6vw,10vh),84px)] [@media(max-height:860px)]:mb-3"
+        className="tw-rise mb-2.5 border-l-[3px] border-primary pl-3 text-[clamp(1.5rem,7.4vw,2.2rem)] leading-[1.08] sm:mb-3 sm:border-l-4 sm:pl-[14px] sm:text-[clamp(2.2rem,9.5vw,4.4rem)] sm:leading-[1.04] font-medium tracking-normal uppercase min-[1101px]:mb-[18px] min-[1101px]:pl-[18px] min-[1101px]:text-[clamp(36px,min(5.6vw,10vh),84px)] [@media(max-height:860px)]:mb-3"
       >
         Plan your
         <br />
@@ -176,7 +176,7 @@ export const Hero = forwardRef<
           type="button"
           onClick={find}
           disabled={busy}
-          className="group/go col-span-2 flex h-12 items-center justify-center gap-3 rounded-xl bg-primary px-6 text-[19px] leading-none font-bold tracking-[0.01em] text-primary-foreground transition-colors duration-200 hover:bg-primary-2 disabled:pointer-events-none disabled:opacity-90 min-[1101px]:col-span-1 min-[1101px]:h-auto min-[1101px]:min-w-[176px]"
+          className="group/go col-span-2 flex h-11 items-center justify-center gap-2.5 rounded-xl bg-primary px-5 text-[16px] leading-none sm:h-12 sm:gap-3 sm:px-6 sm:text-[19px] font-bold tracking-[0.01em] text-primary-foreground transition-colors duration-200 hover:bg-primary-2 disabled:pointer-events-none disabled:opacity-90 min-[1101px]:col-span-1 min-[1101px]:h-auto! min-[1101px]:min-w-[176px] min-[1101px]:text-[19px]"
         >
           {busy ? (
             <Loader2 className="tw-spin size-[21px]" strokeWidth={2.4} />
@@ -194,16 +194,16 @@ export const Hero = forwardRef<
         role="group"
         aria-label="What are you in the mood for"
         style={rise(3)}
-        className="tw-rise mt-4 flex items-center gap-2 tw-noscroll overflow-x-auto pb-1 min-[1101px]:flex-wrap min-[1101px]:overflow-visible"
+        className="tw-rise mt-3 flex items-center gap-1.5 tw-noscroll overflow-x-auto pb-0.5 sm:mt-4 sm:gap-2 sm:pb-1 min-[1101px]:flex-wrap min-[1101px]:overflow-visible"
       >
-        <span className="mr-1 shrink-0 text-[13px] text-muted-foreground">
+        <span className="mr-1 hidden shrink-0 text-[13px] text-muted-foreground sm:inline">
           In the mood for
         </span>
         {VIBES.slice(0, 8).map((v, i) => (
           <Chip
             key={v.id}
             on={S.vibes.includes(v.id)}
-            className={cn("py-[7px] pr-[13px] pl-[11px] text-[13px] [&_svg]:size-[15px]", i > 4 && "[@media(max-height:860px)]:hidden")}
+            className={cn("py-[6px] pr-[11px] pl-[9px] text-[12.5px] sm:py-[7px] sm:pr-[13px] sm:pl-[11px] sm:text-[13px] [&_svg]:size-[14px] sm:[&_svg]:size-[15px]", i > 4 && "[@media(max-height:860px)]:hidden")}
             onClick={() =>
               set({
                 vibes: S.vibes.includes(v.id)
@@ -220,24 +220,24 @@ export const Hero = forwardRef<
       <div
         aria-live="polite"
         style={rise(4)}
-        className="tw-rise mt-4 rounded-2xl border border-line bg-surface px-[18px] py-4 [@media(max-height:860px)]:mt-3 [@media(max-height:860px)]:py-3"
+        className="tw-rise mt-3 rounded-xl border border-line bg-surface px-3.5 py-2.5 sm:mt-4 sm:rounded-2xl sm:px-[18px] sm:py-4 [@media(max-height:860px)]:sm:mt-3 [@media(max-height:860px)]:sm:py-3"
       >
-        <p className="flex items-baseline gap-2.5 text-[17px]">
-          <b className="min-w-[1.3ch] text-4xl leading-none font-bold text-primary">
+        <p className="flex items-baseline gap-2 text-[15px] sm:gap-2.5 sm:text-[17px]">
+          <b className="min-w-[1.3ch] text-2xl leading-none font-bold text-primary sm:text-4xl">
             <Num value={results.length} ms={450} />
           </b>
           <span>
             {results.length === 1 ? "trip fits" : "trips fit"} your budget
           </span>
         </p>
-        <p className="mt-1.5 mb-3 text-[13px] text-muted-foreground">
+        <p className="mt-1 text-[12px] text-muted-foreground sm:mt-1.5 sm:mb-3 sm:text-[13px]">
           {results.length
             ? `From ${o.name} · ${S.days} days · ${MONTHS[S.month - 1]}${moods ? " · " + moods : ""}`
             : stats.budget && isFinite(stats.cheapestHidden)
               ? `Nothing fits yet. The cheapest trip starts at ${fmt(stats.cheapestHidden)} per person.`
               : "Try fewer moods, or more days."}
         </p>
-        <div className="flex flex-wrap gap-2 [@media(max-height:860px)]:hidden">
+        <div className="hidden flex-wrap gap-2 sm:flex [@media(max-height:860px)]:hidden">
           {results.slice(0, 3).map((r) => (
             <button
               key={r.d.id}
@@ -259,7 +259,7 @@ export const Hero = forwardRef<
 
       <div
         style={rise(5)}
-        className="tw-rise mt-[22px] [@media(max-height:860px)]:mt-3 flex gap-2.5 tw-noscroll overflow-x-auto pb-1 min-[1101px]:flex-wrap min-[1101px]:overflow-visible [&>*]:shrink-0"
+        className="tw-rise mt-3 flex gap-2 tw-noscroll sm:mt-[22px] sm:gap-2.5 [@media(max-height:860px)]:sm:mt-3 overflow-x-auto pb-1 min-[1101px]:flex-wrap min-[1101px]:overflow-visible [&>*]:shrink-0"
       >
         {[
           <button key="s" type="button" onClick={surprise}>
@@ -286,7 +286,7 @@ export const Hero = forwardRef<
         ].map((el) => (
           <span
             key={el.key}
-            className="contents [&>*]:inline-flex [&>*]:items-center [&>*]:gap-2 [&>*]:rounded-lg [&>*]:border [&>*]:border-line [&>*]:bg-surface [&>*]:px-4 [&>*]:py-2.5 [&>*]:text-[13.5px] [&>*]:font-semibold [&>*]:transition-colors [&>*]:duration-200 hover:[&>*]:border-primary [&_svg]:size-4 [&_svg]:text-primary"
+            className="contents [&>*]:inline-flex [&>*]:shrink-0 [&>*]:whitespace-nowrap [&>*]:items-center [&>*]:gap-2 [&>*]:rounded-lg [&>*]:border [&>*]:border-line [&>*]:bg-surface [&>*]:px-3 [&>*]:py-2 [&>*]:text-[12.5px] [&>*]:font-semibold sm:[&>*]:px-4 sm:[&>*]:py-2.5 sm:[&>*]:text-[13.5px] [&>*]:transition-colors [&>*]:duration-200 hover:[&>*]:border-primary [&_svg]:size-4 [&_svg]:text-primary"
           >
             {el}
           </span>

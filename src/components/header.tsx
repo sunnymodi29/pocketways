@@ -3,7 +3,7 @@
 import { useAccount } from "@/lib/use-account";
 import { SignInButton } from "./sign-in";
 import { UserMenu } from "./user-menu";
-import { ArrowUpRight, BookOpen, Heart, LogIn, MapPin, Moon, PlaneTakeoff, Route, Sun } from "lucide-react";
+import { ArrowUpRight, BookOpen, Heart, MapPin, Menu, Moon, PlaneTakeoff, Route, Sun, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -11,6 +11,7 @@ import { DESTINATIONS, ORIGINS } from "@/lib/data";
 import { destOf, evaluate, fmt, guideState, originOf } from "@/lib/engine";
 import { useTrip } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Num } from "./kit";
 
 const EXAMPLES: [string, string, number][] = [
@@ -67,11 +68,11 @@ function Tagline() {
           {m.t}
         </span>
       </span>
-      <ArrowUpRight className={cn("size-3.5 shrink-0 text-primary transition-transform duration-200 ease-out group-hover/tl:translate-x-0.5 group-hover/tl:-translate-y-0.5 group-focus-visible/tl:translate-x-0.5 group-focus-visible/tl:-translate-y-0.5", m.href ? "opacity-100" : "opacity-40")} />
+      <ArrowUpRight className={cn("size-3.5 shrink-0 text-primary transition-opacity duration-300 group-hover/tl:opacity-100 group-focus-visible/tl:opacity-100", m.href ? "opacity-100" : "opacity-50")} />
     </>
   );
   const cls =
-    "group/tl hidden min-w-0 max-w-[340px] items-center gap-2 rounded-full bg-surface-2/60 px-3 py-1.5 text-muted-foreground transition-colors duration-200 hover:bg-surface-2 hover:text-foreground min-[900px]:flex";
+    "group/tl hidden min-w-0 max-w-[340px] items-center gap-2 rounded-full bg-surface-2/60 px-3 py-1.5 text-muted-foreground transition-colors duration-300 hover:bg-surface-2 hover:text-foreground min-[1100px]:flex";
   const hover = {
     onMouseEnter: () => (paused.current = true),
     onMouseLeave: () => (paused.current = false),
@@ -90,28 +91,16 @@ function Tagline() {
 }
 
 /** Plane flies out diagonally (top-right); the pin drops in from above and, on leave, exits downward. */
-export function Logo({ phase = "idle", className }: { phase?: "idle" | "in" | "out"; className?: string }) {
+export function Logo({ className }: { className?: string }) {
   return (
-    <span className={cn("relative grid size-9 place-items-center overflow-hidden rounded-lg bg-primary text-primary-foreground", className)}>
-      <PlaneTakeoff
-        className={cn(
-          "size-[18px] transition-all duration-500 ease-[var(--ease)]",
-          phase === "in" && "translate-x-9 -translate-y-9 opacity-0",
-        )}
-      />
-      <MapPin
-        className={cn(
-          "absolute size-[18px] opacity-0",
-          phase === "in" && "tw-pin-in",
-          phase === "out" && "tw-pin-out",
-        )}
-      />
+    <span className={cn("tw-logo-loop relative grid size-9 place-items-center overflow-hidden rounded-lg bg-primary text-primary-foreground", className)}>
+      <PlaneTakeoff className="tw-lp size-[18px]" />
+      <MapPin className="tw-lpin absolute size-[18px]" />
     </span>
   );
 }
 
 export function Header({ onHome, transparent }: { onHome?: () => void; transparent?: boolean }) {
-  const [brand, setBrand] = useState<"idle" | "in" | "out">("idle");
   const { isLoaded, isSignedIn } = useAccount();
   const saved = useTrip((s) => s.saved);
   const openSaved = useTrip((s) => s.openSaved);
@@ -127,7 +116,7 @@ export function Header({ onHome, transparent }: { onHome?: () => void; transpare
   }, [loadSaved]);
 
   const btn =
-    "relative flex h-9 items-center gap-2 overflow-hidden rounded-lg bg-surface-2/70 px-3 text-[13px] font-medium text-foreground transition-colors duration-200 hover:bg-surface-2 hover:text-primary";
+    "relative flex h-9 shrink-0 items-center gap-2 overflow-hidden whitespace-nowrap rounded-lg bg-surface-2/70 px-3 text-[13px] font-medium text-foreground transition-colors duration-200 hover:bg-surface-2 hover:text-primary";
   return (
     <>
     {!transparent && <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 z-30 print:hidden h-[84px] bg-background/50 backdrop-blur-md [mask-image:linear-gradient(to_bottom,black_70%,transparent)]" />}
@@ -142,21 +131,17 @@ export function Header({ onHome, transparent }: { onHome?: () => void; transpare
           href="/"
           onClick={onHome}
           aria-label="Pocketways home"
-          className="flex items-center gap-2.5"
-          onMouseEnter={() => setBrand("in")}
-          onFocus={() => setBrand("in")}
-          onMouseLeave={() => setBrand((p) => (p === "in" ? "out" : p))}
-          onBlur={() => setBrand((p) => (p === "in" ? "out" : p))}
+          className="group/brand flex items-center gap-2.5"
         >
-          <Logo phase={brand} />
-          <b className="text-lg font-bold tracking-tight">Pocketways</b>
+          <Logo />
+          <b className="text-lg font-bold tracking-tight transition-colors duration-200 group-hover/brand:text-primary group-focus-visible/brand:text-primary">Pocketways</b>
         </Link>
         <Tagline />
       </div>
       <nav className="flex items-center gap-1">
         {!(isLoaded && isSignedIn) && (
           <>
-        <button type="button" className={btn} onClick={() => openSaved()} aria-label="My trips">
+        <button type="button" className={cn(btn, "max-sm:hidden")} onClick={() => openSaved()} aria-label="My trips">
           <Heart className="size-4" />
           <span className="hidden sm:inline">My trips</span>
           {saved.length > 0 && (
@@ -165,11 +150,11 @@ export function Header({ onHome, transparent }: { onHome?: () => void; transpare
             </b>
           )}
         </button>
-        <Link href="/multi-city" className={btn}>
+        <Link href="/multi-city" className={cn(btn, "max-sm:hidden")}>
           <Route className="size-4" />
           <span className="hidden md:inline">Multi-city</span>
         </Link>
-        <Link href="/guides" className={btn}>
+        <Link href="/guides" className={cn(btn, "max-sm:hidden")}>
           <BookOpen className="size-4" />
           <span className="hidden sm:inline">Guides</span>
         </Link>
@@ -179,17 +164,71 @@ export function Header({ onHome, transparent }: { onHome?: () => void; transpare
           <span className="grid h-9 place-items-center px-1"><UserMenu /></span>
         ) : (
           <SignInButton>
-            <button type="button" className={btn}><LogIn className="size-4" /><span className="hidden sm:inline">Sign in</span></button>
+            <button type="button" className={btn}><UserRound className="size-4" /><span>Sign in</span></button>
           </SignInButton>
         ))}
         <button
           type="button"
-          className={cn(btn, "w-9 justify-center px-0")}
+          className={cn(btn, "w-9 justify-center px-0 max-sm:hidden")}
           aria-label="Switch light / dark theme"
           onClick={() => setTheme(resolvedTheme === "light" ? "dark" : "light")}
         >
           {mounted && resolvedTheme === "light" ? <Moon className="size-4" /> : <Sun className="size-4" />}
         </button>
+
+        {/* phones: everything else lives behind one menu button */}
+        <Sheet>
+          <SheetTrigger asChild>
+            <button type="button" className={cn(btn, "w-9 justify-center px-0 sm:hidden")} aria-label="Open menu">
+              <Menu className="size-[18px]" />
+              {saved.length > 0 && <i className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary" />}
+            </button>
+          </SheetTrigger>
+          <SheetContent side="right" className="flex w-[min(320px,86vw)] flex-col gap-0 border-line bg-surface p-0">
+            <SheetHeader className="border-b border-line px-4 py-3.5 pr-12">
+              <SheetTitle className="sr-only">Menu</SheetTitle>
+              <SheetClose asChild>
+                <Link href="/" onClick={onHome} aria-label="Pocketways home" className="flex items-center gap-2.5">
+                  <Logo />
+                  <b className="text-lg font-bold tracking-tight">Pocketways</b>
+                </Link>
+              </SheetClose>
+            </SheetHeader>
+            <ul className="flex-1 space-y-1 p-3">
+              {[
+                { icon: <Heart className="size-[18px]" />, label: "My trips", count: saved.length, onClick: () => openSaved() },
+                { icon: <Route className="size-[18px]" />, label: "Multi-city", href: "/multi-city" },
+                { icon: <BookOpen className="size-[18px]" />, label: "Guides", href: "/guides" },
+              ].map((it, i) => {
+                const row = "tw-rise flex h-12 w-full items-center gap-3 rounded-xl px-3 text-[15px] font-medium transition-colors duration-200 hover:bg-surface-2 hover:text-primary";
+                const inner = (
+                  <>
+                    <span className="text-primary">{it.icon}</span>
+                    <span className="flex-1 text-left">{it.label}</span>
+                    {!!it.count && <b className="grid min-w-5 place-items-center rounded-full bg-primary px-1.5 text-[11px] leading-5 text-primary-foreground">{it.count}</b>}
+                  </>
+                );
+                return (
+                  <li key={it.label} style={{ animationDelay: `${0.05 + i * 0.06}s` }} className="tw-rise">
+                    <SheetClose asChild>
+                      {it.href ? <Link href={it.href} className={row}>{inner}</Link> : <button type="button" className={row} onClick={it.onClick}>{inner}</button>}
+                    </SheetClose>
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="border-t border-line p-3">
+              <button
+                type="button"
+                className="flex h-12 w-full items-center gap-3 rounded-xl px-3 text-[15px] font-medium transition-colors duration-200 hover:bg-surface-2 hover:text-primary"
+                onClick={() => setTheme(resolvedTheme === "light" ? "dark" : "light")}
+              >
+                <span className="text-primary">{mounted && resolvedTheme === "light" ? <Moon className="size-[18px]" /> : <Sun className="size-[18px]" />}</span>
+                {mounted && resolvedTheme === "light" ? "Dark mode" : "Light mode"}
+              </button>
+            </div>
+          </SheetContent>
+        </Sheet>
       </nav>
     </header>
     </>

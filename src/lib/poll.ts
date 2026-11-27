@@ -50,44 +50,57 @@ export async function createPoll(body: unknown, ip: string) {
   if (options.length < 2) throw new ApiError(400, "a poll needs at least 2 valid trips");
 
   const db = await getDb();
+  // One round trip for the rate limit: count this poll first, then refuse if the hour's allowance is used up.
   const bucket = `${ip}:${new Date().toISOString().slice(0, 13)}`;
-  const [row] = await db.select().from(rateLimits).where(eq(rateLimits.key, bucket));
-  if ((row?.count ?? 0) >= POLLS_PER_HOUR) throw new ApiError(429, "too many polls from this address, try again later");
-  await db
+  const [lim] = await db
     .insert(rateLimits)
     .values({ key: bucket, count: 1 })
-    .onConflictDoUpdate({ target: rateLimits.key, set: { count: sql`${rateLimits.count} + 1` } });
+    .onConflictDoUpdate({ target: rateLimits.key, set: { count: sql`${rateLimits.count} + 1` } })
+    .returning({ count: rateLimits.count });
+  if ((lim?.count ?? 0) > POLLS_PER_HOUR) throw new ApiError(429, "too many polls from this address, try again later");
 
-  // drop expired polls and their votes opportunistically
-  const old = await db.select({ id: polls.id }).from(polls).where(lt(polls.created, now() - TTL));
-  for (const p of old) {
-    await db.delete(votes).where(eq(votes.pollId, p.id));
-    await db.delete(polls).where(eq(polls.id, p.id));
+  // A random 8-hex id almost never collides; the insert itself tells us if it did, so no lookup first.
+  const title = clean(data.title, 60) || "Where should we go?";
+  const multiple = data.multiple !== false;
+  const created = now();
+  let id = "";
+  for (let i = 0; i < 5 && !id; i++) {
+    const tryId = randomId();
+    const [hit] = await db.insert(polls).values({ id: tryId, title, options, created, multiple }).onConflictDoNothing().returning({ id: polls.id });
+    if (hit) id = hit.id;
   }
+  if (!id) throw new ApiError(500, "could not create the poll, try again");
 
-  let id = randomId();
-  for (let i = 0; i < 5; i++) {
-    const [hit] = await db.select({ id: polls.id }).from(polls).where(eq(polls.id, id));
-    if (!hit) break;
-    id = randomId();
+  // Expired polls are swept now and then (not on every create), in two set-based statements.
+  if (Math.random() < 0.05) {
+    const cutoff = created - TTL;
+    await db.delete(votes).where(sql`${votes.pollId} IN (SELECT id FROM polls WHERE created < ${cutoff})`);
+    await db.delete(polls).where(lt(polls.created, cutoff));
   }
-  await db.insert(polls).values({
+  // The brand-new poll is returned whole so the page can open instantly without asking again.
+  return {
     id,
-    title: clean(data.title, 60) || "Where should we go?",
-    options,
-    created: now(),
-    multiple: data.multiple !== false,
-  });
-  return { id };
+    poll: {
+      id, title, created, multiple,
+      options: options.map((o) => ({ ...o, key: optKey(o), votes: 0 })),
+      voters: [] as { name: string; picks: string[] }[],
+      voter_count: 0,
+      mine: [] as string[],
+    },
+  };
 }
 
 export async function pollView(id: string, voter: string | null) {
   const db = await getDb();
-  const [poll] = await db.select().from(polls).where(eq(polls.id, id));
+  // the poll and its votes are fetched together: one round trip of waiting, not two
+  const [[poll], allVotes] = await Promise.all([
+    db.select().from(polls).where(eq(polls.id, id)),
+    db.select().from(votes).where(eq(votes.pollId, id)).orderBy(votes.seq),
+  ]);
   if (!poll) throw new ApiError(404, "poll not found");
   // a voter with no picks has withdrawn their vote: they do not count
   // seq keeps insertion order (an upsert keeps its row), so "Friend 1" stays the first unnamed voter
-  const rows = (await db.select().from(votes).where(eq(votes.pollId, id)).orderBy(votes.seq)).filter((v) => v.picks.length > 0);
+  const rows = allVotes.filter((v) => v.picks.length > 0);
   let unnamed = 0;
   const counts: Record<string, number> = Object.fromEntries(poll.options.map((o) => [optKey(o), 0]));
   rows.forEach((v) =>
@@ -133,4 +146,11 @@ export async function castVote(id: string, body: unknown) {
     .values({ pollId: id, voter, name, picks, updated: now() })
     .onConflictDoUpdate({ target: [votes.pollId, votes.voter], set: { name, picks, updated: now() } });
   return pollView(id, voter);
+}
+
+/** Just the title, for the tab name and link previews: one small query. */
+export async function pollTitle(id: string) {
+  const db = await getDb();
+  const [row] = await db.select({ title: polls.title }).from(polls).where(eq(polls.id, id));
+  return row?.title ?? null;
 }

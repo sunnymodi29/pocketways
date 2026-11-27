@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Check, Pencil, Plus, RotateCcw, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Lock, Pencil, Plus, RotateCcw, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { fmt, type DayPlan, type Slot } from "@/lib/engine";
 import { useEdits } from "@/lib/edits";
+import { useGate } from "@/lib/use-gate";
 import { cn } from "@/lib/utils";
 
 type Diet = "all" | "veg" | "nonveg";
@@ -16,6 +17,10 @@ const clone = (p: DayPlan[]): DayPlan[] => JSON.parse(JSON.stringify(p));
 /** Itinerary the traveller can reshape: edit, delete, reorder (also across days) and add stops. Saved on this device. */
 export function EditableItinerary({ base, storeKey, onChange }: { base: DayPlan[]; storeKey: string; onChange?: (plan: DayPlan[]) => void }) {
   const { plans, hydrate, save, reset } = useEdits();
+  const { locked, gate } = useGate();
+  const WHY = { title: "Sign in to edit your plan", description: "Reorder stops, change them or add your own, and they stay with the trip on every device." };
+  /** Wraps an edit action: signed-in people run it, everyone else gets the sign-in popup. */
+  const g = <A extends unknown[]>(fn: (...a: A) => void) => (...a: A) => gate(WHY, () => fn(...a));
   useEffect(hydrate, [hydrate]);
   const saved = plans[storeKey];
   // a saved plan only applies while its length still matches the trip
@@ -88,7 +93,14 @@ export function EditableItinerary({ base, storeKey, onChange }: { base: DayPlan[
           )}
         </span>
       </div>
-      <p className="mb-3 text-xs text-muted-foreground">Make it yours: edit, reorder or delete any stop and add your own. Changes are saved on this device and used when you share or export.</p>
+      {locked ? (
+        <button type="button" onClick={() => gate(WHY, () => {})} className="group/lk mb-3 flex w-full items-center gap-2.5 rounded-xl border border-dashed border-primary/50 bg-primary/5 px-3 py-2.5 text-left transition-colors duration-200 hover:bg-primary/10">
+          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/15 text-primary"><Lock className="size-4" /></span>
+          <span className="min-w-0 flex-1 text-xs text-muted-foreground"><b className="block text-[13px] text-foreground">Sign in to make it yours</b>Edit, reorder or delete any stop and add your own. Free, takes five seconds.</span>
+        </button>
+      ) : (
+        <p className="mb-3 text-xs text-muted-foreground">Make it yours: edit, reorder or delete any stop and add your own. Changes are saved on this device and used when you share or export.</p>
+      )}
 
       <div className="space-y-4">
         {plan.map((x, d) => (
@@ -126,13 +138,16 @@ export function EditableItinerary({ base, storeKey, onChange }: { base: DayPlan[
                           <div className="mt-0.5">{s.text}</div>
                         )}
                       </div>
-                      {!isEditing && (
+                      {!isEditing && !locked && (
                         <div className="flex shrink-0 items-center opacity-100 transition-opacity md:opacity-0 md:group-focus-within:opacity-100 md:group-hover:opacity-100">
-                          <button type="button" className={icon} aria-label="Move up" onClick={() => move(d, i, -1)} disabled={d === 0 && i === 0}><ArrowUp className="size-3.5" /></button>
-                          <button type="button" className={icon} aria-label="Move down" onClick={() => move(d, i, 1)} disabled={d === plan.length - 1 && i === x.slots.length - 1}><ArrowDown className="size-3.5" /></button>
-                          <button type="button" className={icon} aria-label="Edit" onClick={() => startEdit(d, i)}><Pencil className="size-3.5" /></button>
-                          <button type="button" className={cn(icon, "hover:text-bad")} aria-label="Delete" onClick={() => commit((p) => p[d].slots.splice(i, 1))}><Trash2 className="size-3.5" /></button>
+                          <button type="button" className={icon} aria-label="Move up" onClick={g(() => move(d, i, -1))} disabled={d === 0 && i === 0}><ArrowUp className="size-3.5" /></button>
+                          <button type="button" className={icon} aria-label="Move down" onClick={g(() => move(d, i, 1))} disabled={d === plan.length - 1 && i === x.slots.length - 1}><ArrowDown className="size-3.5" /></button>
+                          <button type="button" className={icon} aria-label="Edit" onClick={g(() => startEdit(d, i))}><Pencil className="size-3.5" /></button>
+                          <button type="button" className={cn(icon, "hover:text-bad")} aria-label="Delete" onClick={g(() => commit((p) => p[d].slots.splice(i, 1)))}><Trash2 className="size-3.5" /></button>
                         </div>
+                      )}
+                      {!isEditing && locked && (
+                        <button type="button" className={cn(icon, "opacity-100 md:opacity-0 md:group-focus-within:opacity-100 md:group-hover:opacity-100")} aria-label="Sign in to edit this stop" title="Sign in to edit" onClick={() => gate(WHY, () => {})}><Lock className="size-3.5" /></button>
                       )}
                     </div>
                   </li>
@@ -150,8 +165,8 @@ export function EditableItinerary({ base, storeKey, onChange }: { base: DayPlan[
                 <button type="button" onClick={() => setAdding(null)} className="rounded-lg border border-line px-3 py-1.5 text-xs font-medium">Cancel</button>
               </div>
             ) : (
-              <button type="button" onClick={() => { setAdding(d); setEditing(null); }} className="mt-3 flex items-center gap-1.5 text-xs font-medium text-primary hover:underline">
-                <Plus className="size-3.5" /> Add a stop to Day {x.day}
+              <button type="button" onClick={g(() => { setAdding(d); setEditing(null); })} className="mt-3 flex items-center gap-1.5 text-xs font-medium text-primary hover:underline">
+                {locked ? <Lock className="size-3.5" /> : <Plus className="size-3.5" />} Add a stop to Day {x.day}
               </button>
             )}
             {x.tip && <p className="mt-3 rounded-lg bg-surface-2 px-3 py-2 text-xs text-muted-foreground">💡 {x.tip}</p>}

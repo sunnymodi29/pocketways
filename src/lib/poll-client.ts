@@ -1,6 +1,7 @@
 "use client";
 
 import { toast } from "sonner";
+import { useSignInPrompt } from "./sign-in-prompt";
 import type { SavedTrip } from "./store";
 
 const VOTER_KEY = "tw-voter";
@@ -34,6 +35,9 @@ export interface PollData {
   mine: string[];
 }
 
+/** What the sign-in popup says when someone tries to create a poll without an account. */
+export const POLL_WHY = { title: "Sign in to plan with friends", description: "Create a poll, share the link, and watch the votes come in. Your friends can vote without an account." };
+
 export class PollError extends Error {
   code: number | "net";
   constructor(code: number | "net", message: string) {
@@ -60,23 +64,28 @@ export async function pollApi<T = PollData>(path: string, body?: unknown): Promi
 export const pollMessage = (e: unknown) =>
   e instanceof PollError ? (e.code === 404 ? "This poll doesn't exist (or the link is wrong)." : e.message) : "Something went wrong";
 
-/** Creates the poll and opens it. Returns true when it worked. */
-export async function createPoll(items: SavedTrip[], opts: { title: string; multiple: boolean }) {
+/**
+ * Creates the poll and opens it. The new poll comes back with the response and is put straight into the cache,
+ * and the page is opened without a reload, so there is nothing left to wait for.
+ */
+export async function createPoll(items: SavedTrip[], opts: { title: string; multiple: boolean }, nav: { open: (url: string) => void; seed: (key: unknown[], poll: PollData) => void }) {
   const list = items.slice(0, 8);
   if (list.length < 2) {
     toast("Pick at least 2 trips first");
     return false;
   }
   try {
-    const { id } = await pollApi<{ id: string }>("", {
+    const { id, poll } = await pollApi<{ id: string; poll: PollData }>("", {
       title: opts.title.trim() || "Where should we go?",
       multiple: opts.multiple,
       options: list.map((s) => ({ id: s.id, from: s.from, days: s.days })),
     });
-    window.location.assign(`/poll/${id}`);
+    nav.seed(["poll", id, voterId()], poll);
+    nav.open(`/poll/${id}`);
     return true;
   } catch (e) {
-    toast(pollMessage(e));
+    if (e instanceof PollError && e.code === 401) useSignInPrompt.getState().ask(POLL_WHY);
+    else toast(pollMessage(e));
     return false;
   }
 }

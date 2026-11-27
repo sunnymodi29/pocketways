@@ -8,7 +8,9 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/
 import { destOf, evaluate, fmt, guideState, hrsLabel, originOf } from "@/lib/engine";
 import { iconByName } from "@/lib/icons";
 import { waUrl } from "@/lib/links";
+import { POLL_WHY } from "@/lib/poll-client";
 import { savedHash, useTrip, type SavedTrip } from "@/lib/store";
+import { useGate } from "@/lib/use-gate";
 import { DestIcon } from "./kit";
 import { WhatsAppIcon } from "./brand-icons";
 
@@ -30,6 +32,7 @@ export function SavedPanel({
   const toggleSave = useTrip((s) => s.toggleSave);
   const clearSaved = useTrip((s) => s.clearSaved);
   const openPollDraft = useTrip((s) => s.openPollDraft);
+  const { gate } = useGate();
   const saveAll = useTrip((s) => s.saveAll);
   const openTrip = useTrip((s) => s.openSavedTrip);
   const [armed, setArmed] = useState(false);
@@ -117,7 +120,7 @@ export function SavedPanel({
                 <Button variant="outline" className="rounded-lg" onClick={() => navigator.clipboard.writeText(url()).then(() => toast("Link copied")).catch(() => toast("Couldn't copy the link"))}><Link2 /> Copy link</Button>
                 <Button variant="outline" className="rounded-lg" onClick={() => { close(); onCard(items); }}><ImageIcon /> Share card</Button>
                 <Button variant="outline" className="rounded-lg" onClick={compare}><ArrowLeftRight /> Compare</Button>
-                <Button variant="outline" className="rounded-lg" onClick={() => openPollDraft(items)}><Users /> Plan with friends</Button>
+                <Button variant="outline" className="rounded-lg" onClick={() => gate(POLL_WHY, () => openPollDraft(items))}><Users /> Plan with friends</Button>
                 <Button variant="outline" className="rounded-lg" onClick={() => { if (!armed) setArmed(true); else { clearSaved(); setArmed(false); } }}><Trash2 /> {armed ? "Tap again to clear" : "Clear all"}</Button>
               </>
             )}

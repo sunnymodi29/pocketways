@@ -1,5 +1,7 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { CheckCheck, CircleDot, Loader2, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +19,8 @@ export function PollCreateDialog() {
   const [title, setTitle] = useState("Where should we go?");
   const [multiple, setMultiple] = useState(true);
   const [busy, setBusy] = useState(false);
+  const router = useRouter();
+  const qc = useQueryClient();
 
   useEffect(() => {
     if (items) { setTitle("Where should we go?"); setMultiple(true); setBusy(false); }
@@ -79,7 +83,7 @@ export function PollCreateDialog() {
             onClick={async () => {
               if (!items) return;
               setBusy(true);
-              const ok = await createPoll(items, { title, multiple });
+              const ok = await createPoll(items, { title, multiple }, { open: (url) => router.push(url), seed: (key, poll) => qc.setQueryData(key, poll) });
               if (!ok) setBusy(false);
             }}
           >

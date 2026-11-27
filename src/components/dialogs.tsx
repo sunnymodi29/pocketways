@@ -8,8 +8,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MONTHS, destOf, evaluate, fmt, guideState, hrsLabel, originOf } from "@/lib/engine";
 import { iconByName } from "@/lib/icons";
+import { POLL_WHY } from "@/lib/poll-client";
 import { makeCard, type CardInput } from "@/lib/share-card";
 import { useTrip, type SavedTrip } from "@/lib/store";
+import { useGate } from "@/lib/use-gate";
 import { cn } from "@/lib/utils";
 import { DestIcon, Tag } from "./kit";
 
@@ -123,6 +125,7 @@ export function CompareTray({ onOpen }: { onOpen: () => void }) {
 export function CompareDialog({ items, month, onClose, onOpenTrip }: { items: SavedTrip[] | null; month: number; onClose: () => void; onOpenTrip: (t: SavedTrip) => void }) {
   const saved = useTrip((s) => s.saved);
   const toggleSave = useTrip((s) => s.toggleSave);
+  const { gate } = useGate();
   if (!items) return null;
   const rows = items.map((it) => {
     const d = destOf(it.id)!;
@@ -200,7 +203,7 @@ export function CompareDialog({ items, month, onClose, onOpenTrip }: { items: Sa
           </table>
         </div>
         <DialogFooter className="flex-row flex-wrap gap-2 border-t border-line px-3.5 pt-3 pb-3.5 sm:justify-start">
-          <Button onClick={() => { onClose(); useTrip.getState().openPollDraft(items); }}><Users /> Let friends vote</Button>
+          <Button onClick={() => gate(POLL_WHY, () => { onClose(); useTrip.getState().openPollDraft(items); })}><Users /> Let friends vote</Button>
           <Button variant="outline" onClick={onClose}>Close</Button>
         </DialogFooter>
       </DialogContent>

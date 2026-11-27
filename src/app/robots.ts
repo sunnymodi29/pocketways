@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
-  return { rules: { userAgent: "*", allow: "/", disallow: ["/api/", "/poll/", "/account", "/signin"] }, sitemap: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3100"}/sitemap.xml` };
+  return { rules: { userAgent: "*", allow: "/", disallow: ["/api/", "/poll/", "/account"] }, sitemap: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3100"}/sitemap.xml` };
 }
